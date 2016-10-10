@@ -212,7 +212,7 @@ strong {
   font-weight:700;
 }
 
-header ul li + li + li + li + li {
+header ul li + li + li {
   border-right:none;
   width:89px;
 }
@@ -310,7 +310,7 @@ footer {
     width:99%;
   }
 
-  header li, header ul li + li + li + li + li{
+  header li, header ul li + li + li{
     width:33%;
   }
 }
