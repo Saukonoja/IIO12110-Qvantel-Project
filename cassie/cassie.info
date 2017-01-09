@@ -1,0 +1,4 @@
+name = Cassie
+type = module
+description = Cassie demo module.
+core = 7.x

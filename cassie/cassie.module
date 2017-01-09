@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function cassie_help($path, $args) {
+  if ($path == 'admin/help#cassie') {
+    return t('To use this module, go to the block page and turn on the membercount block.');
+  }
+}
+
+/** 
+ * Implementation of hook_menu().
+ */
+function cassie_menu() {
+  $items['cassie'] = array(
+    'title' => 'Hello cassie!',
+    'page callback' => 'cassie_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+/**
+ * Page callback for /cassie.
+ */
+
+
+function cassie_page() {
+
+
+$cluster  = Cassandra::cluster()
+                ->build();
+$keyspace  = 'killrvideo';
+$session  = $cluster->connect($keyspace);
+
+$statement = $session->execute(new Cassandra\SimpleStatement(
+    "INSERT INTO users (userid, created_date, email, firstname, lastname) 
+      VALUES (14c532ac-f5ae-479a-9d0a-36604732e01d, '2013-01-01 00:00:00', 
+      'luke@example.com','Luke','Tillman')"
+  ));
+
+
+$result = $session->execute(new Cassandra\SimpleStatement
+          ("SELECT firstname, lastname, email FROM killrvideo.users
+            WHERE userid=14c532ac-f5ae-479a-9d0a-36604732e01d"));
+
+foreach ($result as $row) {
+    printf("user: \"%s\" \"%s\" email: \"%s\" \n", $row['firstname'],
+    $row['lastname'], $row['email']);
+  }
+
+
+  return 'Hello cassie toihfdsaghgfdsmiiikoooooo!';
+}
