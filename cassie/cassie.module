@@ -1,5 +1,11 @@
 <?php
 
+include drupal_get_path('module', 'cassie').'/Cassie.class.php';
+include drupal_get_path('module', 'cassie').'/UUID.class.php';
+
+$GLOBALS['cassie'] = new Cassie();
+$GLOBALS['cassie']->connect();
+
 /**
  * Implementation of hook_help().
  */
@@ -9,49 +15,269 @@ function cassie_help($path, $args) {
   }
 }
 
-/** 
+
+
+/**
  * Implementation of hook_menu().
  */
 function cassie_menu() {
-  $items['cassie'] = array(
-    'title' => 'Hello cassie!',
-    'page callback' => 'cassie_page',
+  $items['pants'] = array(
+    'title' => 'Pants',
+    'page callback' => 'pants_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
-  return $items;
+  $items['jackets'] = array(
+    'title' => 'Jackets',
+    'page callback' => 'jackets_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => TRUE,
+  );
+
+  $items['pants/%'] = array(
+   'page callback' => 'pants_details',
+   'access callback' => TRUE,
+  );
+
+  $items['jackets/%'] = array(
+   'page callback' => 'jackets_details',
+   'access callback' => TRUE,
+  );
+
+ return $items;
 }
+
+
 
 /**
- * Page callback for /cassie.
+ * Implements hook_block_info().
  */
 
-
-function cassie_page() {
-
-
-$cluster  = Cassandra::cluster()
-                ->build();
-$keyspace  = 'killrvideo';
-$session  = $cluster->connect($keyspace);
-
-$statement = $session->execute(new Cassandra\SimpleStatement(
-    "INSERT INTO users (userid, created_date, email, firstname, lastname) 
-      VALUES (14c532ac-f5ae-479a-9d0a-36604732e01d, '2013-01-01 00:00:00', 
-      'luke@example.com','Luke','Tillman')"
-  ));
+function cassie_block_info() {
+  $blocks['cassie'] = array(
+    'info' => t('Cassie footer'),
+  );
+  return $blocks;
+}
 
 
-$result = $session->execute(new Cassandra\SimpleStatement
-          ("SELECT firstname, lastname, email FROM killrvideo.users
-            WHERE userid=14c532ac-f5ae-479a-9d0a-36604732e01d"));
-
-foreach ($result as $row) {
-    printf("user: \"%s\" \"%s\" email: \"%s\" \n", $row['firstname'],
-    $row['lastname'], $row['email']);
+function cassie_block_view($delta = '') {
+  switch ($delta) {
+    case 'cassie':
+      $block['subject'] = t('Cassiie');
+      if (user_access('access content')) {
+        // Use our custom function to retrieve data.
+        $result = cassie_contents();
+        // Array to contain items for the block to render.
+        $items = array();
+        // Iterate over the resultset and format as links.
+        foreach ($result as $node) {
+          $items[] = array(
+            'data' => l($node->title, 'node/' . $node->nid),
+          );
+        }
+        // No content in the last week.
+        if (empty($items)) {
+          $block['content'] = t('No posts available.');
+        }
+        else {
+          // Pass data through theme function.
+          $block['content'] = theme('item_list', array(
+            'items' => $items));
+        }
+      }
+    return $block;
   }
 
-
-  return 'Hello cassie toihfdsaghgfdsmiiikoooooo!';
 }
+
+function cassie_contents(){
+	return "dsfasdfsad";
+}
+
+/**function check_session(){
+
+	$cassie;
+	
+	if (!isset($_SESSION['cassie'])){
+                $cassie = new Cassie();
+                $cassie->connect();
+	}
+	$_SESSION['cassie'] = serialize($cassie);
+
+}*/
+
+function get_products(){
+	//$cassie = new Cassie();
+	//$cassie->connect();
+	//$cassie = unserialize($_SESSION['cassie']);
+	//$_SESSION['cassie'] = serialize($cassie);
+	//$cassie = $_SESSION['cassie'];
+	/**if (!isset($_SESSION['cassie'])){
+		$cassie = new Cassie();
+		$cassie->connect();
+		$_SESSION['cassie'] = $cassie;
+	}else{
+		$cassie = $_SESSION['cassie'];
+	}*/
+
+
+
+	$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+	$page = substr(strrchr($address, '/'), 1);
+
+	$result = $GLOBALS['cassie']->getProducts($page);
+        $output = "<div >";
+        foreach ($result as $row) {
+                $output .= "<div style='display:inline-block; margin-left:10px;'><h4><a href='" . $page . "/" . $row['product_id'] . "'>" . $row['product_id'] . "</a></h4><p>" . $row['price'] .
+                "</p><a href='". $page . "/" . $row['product_id'] . "'><img style='width:200px' src='" . $row['image_id'] . "'/></a></div>";
+        }
+        $output .= "</div>";
+	return $output;
+}
+
+function pants_page() {
+	updateCounter();
+        return get_products();
+}
+
+function jackets_page(){
+	updateCounter();
+	return get_products();
+}
+
+function get_product_details(){
+
+        $address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+        $pageUnparsed = explode("/", $address, 3);
+        $pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
+        $page = explode("/", $pageWithSubpage, 2);
+
+        $productWithSpecials = substr(strrchr($address, '/'), 1);
+	$product = str_replace("%20"," ", $productWithSpecials);
+
+        $result = $GLOBALS['cassie']->getProductInfo($page[0], $product);
+
+        $row = $result->first();
+
+        $output = "<h1 style='font-size:30px'>" . $row['product_id'] . "</h1>\n";
+        $output .= $row['price'] . "<br>" . $row['description']. "<br><img style='width:300px' src='" . $row['image_id'] . "'>";
+        return $output;
+}
+
+function pants_details(){
+        return get_product_details();
+}
+
+function jackets_details(){
+        return get_product_details();
+}
+
+function updateCounter(){
+	$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+        $pageWasRefreshed = isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0';
+
+        $page = substr(strrchr($address, '/'), 1);
+
+        if (!$pageWasRefreshed ) {
+                $GLOBALS['cassie']->updateCounter($page);
+        }
+
+}
+
+
+
+	/** stuff
+
+	$location = file_get_contents('http://freegeoip.net/json/'.$_SERVER['REMOTE_ADDR']);
+
+        $jsonIterator = new RecursiveIteratorIterator(
+                new RecursiveArrayIterator(json_decode($location, TRUE)),
+                RecursiveIteratorIterator::SELF_FIRST);
+
+        $arrayJson = array();
+
+        foreach ($jsonIterator as $key => $val) {
+                if(is_array($val)) {
+                   echo "$key:\n";
+                } else {
+                   $arrayJson[] = $val;
+                   //echo "$val\n";
+
+                }
+        }
+
+        //$uuids = gen_uuid();
+        //$cas = new Cassandra\Uuid();
+        //$uuid = $cas->__construct(j);
+        $v4uuid = UUID::v4();
+        $language = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+        $ip_address = $arrayJson[0];
+        $time_zone = $arrayJson[7];
+        $country = $arrayJson[2];
+        $region = $arrayJson[4];
+        $city = $arrayJson[5];
+
+        $cookieArray = array($v4uuid, $language, $ip_address, $time_zone, $country, $region, $city);
+
+        $cookieJson = json_encode($cookieArray, JSON_UNESCAPED_UNICODE);
+
+        if (empty($_COOKIE["location"])) {
+                setcookie("location", $cookieJson, time()+3600);
+                $newCassie->insertUsers($v4uuid, $language, $ip_address, $time_zone, $country, $region, $city);
+        }
+
+
+
+	/**$cookie = $_COOKIE['location'];
+        $cookie = stripslashes($cookie);
+        $savedArray = json_decode($cookie, true);
+
+        print_r($savedArray);
+
+        */
+
+
+        /**
+        $result2 = $newCassie->printUser();
+        $row2 = $result2->first();
+
+        $arrayres = $row2['city'];
+
+        print_r($arrayres);
+
+        */
+
+        //$result = $newCassie->getProducts($page);
+
+        //$array = array();
+        //foreach($result as $row){
+
+        //$array[] = $row['products'];
+        //}
+
+
+        //foreach ($result as $row) {
+        //      printf("\"%s\" \"%s\"  \n", $row['product_id'], $row['amount']);
+        //}
+
+        //$test = "<h1>dfs</h1>\n";
+        //$row = $result->first();
+        //$test2 = "fdsasadf";
+        //$array = array();
+        //$array = $row['products']->values();
+
+        //$test = var_export($row['products'], true);
+
+
+        //for($i = 0; $i < count($array); $i++){
+        //      $print = $array[0] + $array[1];
+        //}
+
+        //$comma_separated = implode(", ", $array);
+
+
