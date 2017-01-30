@@ -1,0 +1,194 @@
+<?php
+//include drupal_get_path('module', 'cassie').'/Cassie.class.php';
+
+$GLOBALS['cassie'] = new Cassie();
+$GLOBALS['cassie']->connect();
+
+
+function cassieregister_menu(){
+	$items['registration'] = array(
+    	  'title' => 'Registration',
+    	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('cassieregister_registration_page'),
+	  'access arguments' => array('cassieregister_registration_page'),
+	  'access callback' => TRUE,
+	  'type' => MENU_CALLBACK,
+	);
+
+	$items['login'] = array(
+	  'title' => 'Login',
+	  'page callback' => 'drupal_get_form',
+	  'page arguments' => array('cassieregister_login_page'),
+	  'access arguments' => array('cassieregister_login_page'),
+	  'access callback' => TRUE,
+	  'type' => MENU_CALLBACK,
+	);
+
+	return $items;
+}
+
+
+function cassieregister_block_info() {
+  $blocks['logged'] = array(
+    'info' => t('logged'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+
+  return $blocks;
+}
+
+function cassieregister_block_view($delta = '') {
+
+   switch($delta){
+     case 'logged':
+	if (isset($_SESSION['logged_as'])){
+        	$block['content'] = "<form method='post' action=''><div id='user'>Hello " . $_SESSION['logged_as'] .
+		"!<input type='submit' id='logout' name='logout' value='Log out'></div></form>";
+	}
+	else{
+		$block['content'] = "";
+	}
+	log_out();
+     return $block;
+  }
+
+}
+
+function log_out(){
+
+	if (isset($_POST['logout'])){
+		unset($_SESSION['logged_as']);
+		header("Location: /");
+	}
+
+}
+
+
+/*function user_authenticate($name, $password){
+	$authenticate = $GLOBALS['cassie']->testLogin($name, $password);
+
+
+
+        if ($authenticate === 1){
+                $_SESSION['logged_as'] = $name;
+                return true;
+		//$form_state['redirect'] = '/';
+        }else{
+                drupal_set_message("Username or password is invalid!");
+        }
+
+}*/
+
+function cassieregister_login_page($form, &$form_state){
+        $form['name'] = array(
+                '#type' => 'textfield',
+                '#title' => 'Username',
+                '#attributes' => array('class' => array('hidevaluetext')),
+        );
+        $form['pass'] = array(
+                '#type' => 'password',
+                '#title' => 'Password',
+                '#attributes' => array('class' => array('hidevaluetext')),
+        );
+        //$form['mail'] = array(
+        //      '#type' => 'textfield',
+        //      '#title' => t('E-mail'),
+        //);
+
+        $form['submit'] = array(
+                '#type' => 'submit',
+                '#value' => t('Login'),
+		'#attributes' => array('id' => 'loginButton'),
+        );
+
+        return $form;
+
+}
+
+function cassieregister_login_page_submit($form, &$form_state) {
+        //$pass = user_password();
+        $newuser = array(
+          'name' => $form_state['values']['name'],
+          'pass' => $form_state['values']['pass'],
+          //'mail' => $form_state['values']['mail'],
+          //'init' => $form_state['values']['mail'],
+          'status' => 1,
+        );
+
+	$authenticate = 0;
+
+	if ($newuser['name'] !== "" && $newuser['pass'] !== ""){
+		$authenticate = $GLOBALS['cassie']->testLogin($newuser['name'], $newuser['pass']);
+
+		if ($authenticate === 1){
+                	$_SESSION['logged_as'] = $newuser['name'];
+                	$form_state['redirect'] = '/';
+        	}else{
+                	drupal_set_message("Username or password is invalid!", 'error');
+        	}
+
+	}else{
+		drupal_set_message("Fill fields first", 'error');
+	}
+
+        //$GLOBALS['cassie']->testRegister($newuser['name'], $newuser['pass']);
+        //$user = user_save('', $newuser);
+        //$user->password = $pass; // Add plain text password into user account to generate mail tokens.
+        //_user_mail_notify('register_no_approval_required', $user);
+
+        //drupal_set_message($test);
+
+
+}
+
+
+
+
+function cassieregister_registration_page($form, &$form_state){
+	$form['name'] = array(
+		'#type' => 'textfield',
+		'#title' => 'Username',
+		'#attributes' => array('class' => array('hidevaluetext')),
+	);
+	$form['pass'] = array(
+		'#type' => 'password',
+		'#title' => 'Password',
+		'#attributes' => array('class' => array('hidevaluetext')),
+	);
+	//$form['mail'] = array(
+	//	'#type' => 'textfield',
+	//	'#title' => t('E-mail'),
+	//);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Create a new account'),
+		'#attributes' => array('id' => 'registerButton'),
+	);
+
+	return $form;
+
+}
+
+function cassieregister_registration_page_submit($form, &$form_state) {
+	//$pass = user_password();
+	$newuser = array(
+	  'name' => $form_state['values']['name'],
+	  'pass' => $form_state['values']['pass'],
+	  //'mail' => $form_state['values']['mail'],
+	  //'init' => $form_state['values']['mail'],
+	  'status' => 1,
+	);
+
+	if ($newuser['name'] !== "" && $newuser['pass'] !== ""){
+		$GLOBALS['cassie']->testRegister($newuser['name'], $newuser['pass']);
+		drupal_set_message('Registration was succesfull!');
+        }else{
+                drupal_set_message("Fill fields first", 'error');
+        }
+}
+
+
+
+
+

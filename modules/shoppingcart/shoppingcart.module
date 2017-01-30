@@ -1,0 +1,107 @@
+<?php
+
+
+$GLOBALS['cassie'] = new Cassie();
+$GLOBALS['cassie']->connect();
+
+
+function shoppingcart_menu(){
+  $items['cart'] = array(
+    'title' => 'Shopping cart',
+    'page callback' => 'cart_page',
+    'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+  );
+
+return $items;
+
+}
+
+
+function shoppingcart_block_info() {
+  $blocks['cart'] = array(
+    'info' => t('cart'),
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+
+
+function shoppingcart_block_view($delta = '') {
+
+   switch($delta){
+     case 'cart':
+        $block['subject'] = t("Shopping cart");
+
+	if (isset($_SESSION['logged_as'])){
+		if (isset($_COOKIE['count']) && $_COOKIE['count'] > 0){
+	        	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $_COOKIE['count'] . "</span></div></a>";
+		}
+		else{
+			$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
+		}
+     	}else{
+		$block['content'] = "";
+	}
+	return $block;
+  }
+
+}
+
+
+function cart_page(){
+	check_uuid();
+	$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
+
+	$output = "<table>";
+	$price = 0;
+	$amount = 0;
+	foreach ($result as $row){
+		$output .= "<tr><td><img id='shoppingCartImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] .
+		 "</td><td>" . $row['price'] . " &#x20ac;</td><td>" . $row['amount'].
+		 " pcs.</td><td><form method='POST' action=''><input type='hidden' name='product' value='" . $row['product_id'] .
+		 "' ><button type='submit' id='deleteFromCart' class='deleteProduct' name='deleteProduct'><i class='fa fa-times'></i></button></form></td></tr>";
+        	$price += $row['price'] * $row['amount'];
+		$amount += $row['amount'];
+	}
+	$output .= "</table>";
+	delete_product();
+	$display = "none;";
+
+	if ($amount > 0){
+		$display = "default;";
+	}
+
+	$output .= "<div id='total'>Total price: " . $price . " &#x20ac; <br>Items in cart: " . $amount . " pcs.".
+		"<form method='POST' action=''><br><button id='checkout' style='display:" .$display . "' type='submit' name='checkout'>Checkout <i class='fa fa-money fa-lg'></i></button></div>";
+
+	checkout();
+	return $output;
+
+}
+
+function delete_product(){
+	if (isset($_POST['deleteProduct'])){
+		$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
+		$count = $_COOKIE['count'];
+                setcookie("count", $count - 1, time()+3600, '/');
+
+		header("Refresh:0");
+                drupal_set_message($_POST['product'] . " removed from the cart.");
+	}
+}
+
+
+function checkout(){
+ 	if (isset($_POST['checkout'])){
+		$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
+		foreach ($result as $row){
+			$GLOBALS['cassie']->updateCheckout($_SESSION['uuid'], $row['product_id'], $row['amount'], $row['price'], $row['image_link']);
+
+		}
+
+		setcookie("count", "", time()-3600);
+		header("Refresh:0");
+		drupal_set_message("Checkout was succesfull!");
+	}
+}

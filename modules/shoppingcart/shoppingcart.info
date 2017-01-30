@@ -1,0 +1,7 @@
+name = Shopping cart
+type = module
+core = 7.x
+description = Shopping cart module.
+
+stylesheets[all][] = cart.css
+stylesheets[all][] = font-awesome.min.css

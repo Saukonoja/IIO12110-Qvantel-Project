@@ -1,0 +1,6 @@
+name = Cassie register
+type = module
+description = Cassie register module.
+core = 7.x
+
+stylesheets[all][] = custom.css

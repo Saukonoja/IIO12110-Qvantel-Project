@@ -1,0 +1,8 @@
+name = Cassie
+type = module
+description = Cassie demo module.
+core = 7.x
+
+stylesheets[all][] = style-custom.css
+stylesheets[all][] = font-awesome.min.css
+
