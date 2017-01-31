@@ -12,6 +12,7 @@ class Cassie{
 	//Connect to local Cassandra cluster and keuspace 'Drupal'
 	public function connect(){
 		$GLOBALS['cluster'] = Cassandra::cluster()
+				->withContactPoints('172.31.19.110', '172.31.48.120')
                                 ->build();
 		$GLOBALS['keyspace'] = 'drupal';
                 $GLOBALS['session'] = $GLOBALS['cluster']->connect($GLOBALS['keyspace']);

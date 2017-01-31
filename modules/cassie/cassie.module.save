@@ -449,8 +449,6 @@ function cassie_admin_page_submit($form, &$form_state) {
 	  'description' => $form_state['values']['description'],
           'status' => 1,
         );
-
-
 }
 
 

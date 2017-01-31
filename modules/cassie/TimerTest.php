@@ -1,28 +1,31 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html>
 	<head>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-		<script>
-			var start;
+		<script>					
+			var msUntilStart;
+			var msUntilEnd;
 
 			$(document).ready(function() {
-				alert("Document ready called!");
-				start = Date.getTime();
-
-			  $(window).unload(function() {
-				  alert("Unload called!");
-				  end = Date.getTime();
-				  $.ajax({ 
-					url: "timelogger.php",
-					data: {'timeSpent': end - start}
-				  })
-				});
-			}
+				var start = new Date();
+				msUntilStart = start.getTime();
+				//alert("<?php echo $_SESSION["timeListIndex"]; ?>");
+			});
+			
+			window.onbeforeunload = function(){	  			
+				var end = new Date();
+				msUntilEnd = end.getTime();
+				$.get( "timelogger.php", {time: msUntilEnd-msUntilStart});
+			}			
 		</script>
 	</head>
 	<body>
 		<h1>Vierailujen kestot:</h1>
-		<?php
+		<?php		
 			echo "vierailu1: " . $_SESSION["page1_time"] . " millisekuntia<br>";
 			echo "vierailu2: " . $_SESSION["page2_time"] . " millisekuntia<br>"; 
 			echo "vierailu3: " . $_SESSION["page3_time"] . " millisekuntia<br>"; 
