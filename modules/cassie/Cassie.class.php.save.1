@@ -30,8 +30,8 @@ class Cassie{
 	//Gets all products for single category page with defined priority
 	public function getProducts($page_id){
 		$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
-			("SELECT product_id, price, description, image_link FROM products 
-				WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
+			("SELECT product_id, price, description, image_id FROM products 
+				WHERE page_id = '$page_id' AND high_priority = true"));
 		return $result;
 	}
 
@@ -76,21 +76,14 @@ class Cassie{
         }
 
 	//Gets all info needed to show to client of a product
-        public function getProductInfoTest($product_id){
+        public function getProductInfo($product_id){
                 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
                         ("SELECT product_id, price, description, image_link FROM products_by_product
                                 WHERE product_id = '$product_id'"));
                 return $result;
         }
 
-	//Gets all info needed to show to client of a product
-        public function getProductInfo($product_id){
-                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
-                        ("SELECT product_id, price, description, image_link FROM products
-                                WHERE product_id = '$product_id' ALLOW FILTERING"));
-                return $result;
-        }
-
+	
 
 	//Promotes user to HIGH_PRIORITY
 	public function promoteUser($uuid){
@@ -307,21 +300,13 @@ class Cassie{
                         "DELETE FROM users_cart WHERE uuid = $uuid AND product_id = '$product_id'"));
         }
 
-
-	 //add new product to database
-         public function addProduct($category_id, $product_id, $price, $amount, $description, $image_link){
+	//add new product to database
+	public function addProduct($uuid, $product_id){
                 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "INSERT INTO products 
-			   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
-			     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', false)"));
+                        "DELETE FROM users_cart WHERE uuid = $uuid AND product_id = '$product_id'"));
         }
 
 
-	//update products checkout when paid
-         public function deleteProduct($category_id, $product_id){
-                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "DELETE FROM products WHERE category_id = '$category_id' AND product_id = '$product_id'"));
-        }
 
 
 

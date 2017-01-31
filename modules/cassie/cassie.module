@@ -62,8 +62,8 @@ function cassie_init(){
 
 function launch_help(){
 
-	if($_SESSION["launchHelp"] == true){
-		
+	if ($_SESSION["launchHelp"] == true){
+
 	}
 }
 
@@ -214,9 +214,9 @@ function get_products(){
 	$test = true;
 	$cookie = get_cookie();
 	//$os = get_user_agent();
-	$result = $GLOBALS['cassie']->getProductsByOs($page,"iPhone");
-	$result2 = $GLOBALS['cassie']->getProductsByOs($page,"Android");
-	$result3 = $GLOBALS['cassie']->getTest($page, "iPhone", true);
+	$result = $GLOBALS['cassie']->getProducts($page);
+	//$result2 = $GLOBALS['cassie']->getProductsByOs($page, "Android");
+	//$result3 = $GLOBALS['cassie']->getTest($page, "iPhone", true);
 
 	$output = "<div>";
 	$i = 0;
@@ -227,14 +227,14 @@ function get_products(){
 	$highpriority = $segments['priorityHigh'];
 	//echo $highpriority;
 	//echo $visits;
-	if ($highpriority === 1){
+	/*if ($highpriority === 1){
 		foreach ($result3 as $row) {
                 	$output .= "<a href='". $page . "/" . $row['product_id'] . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
                  	. $row['image_link'] . "'/><p id='productName'>" . $row['product_id'] . "</p><p id='productPrice'>" . $row['price'] .
                 	" &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
                 	$i++;
         	}
-	}
+	}*/
 
 
         foreach ($result as $row) {
@@ -243,14 +243,14 @@ function get_products(){
 		" &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
 		$i++;
         }
-
+/*
 	foreach ($result2 as $row) {
                 $output .= "<a href='". $page . "/" . $row['product_id'] . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
                  . $row['image_link'] . "'/><p id='productName'>" . $row['product_id'] . "</p><p id='productPrice'>" . $row['price'] .
                 " &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
                 $i++;
         }
-
+*/
         $output .= "</div>";
 
 	return $output;
@@ -278,12 +278,14 @@ function check_user_agent(){
 
 function phones_page(){
 	updateCounter();
-	return get_products();
+	//return get_products();
+	return "puhelimet";
 }
 
 function pants_page() {
 	updateCounter();
-	return get_products();
+	//return get_products();
+	return "housut";
 }
 
 function jackets_page(){
@@ -387,6 +389,11 @@ function updateCounter(){
 
 function cassie_admin_page($form, &$form_state){
 	if (user_access('administer')) {
+
+		$toppings = array(
+  		  '1' => t('True'),
+  		  '2' => t('False'),
+		);
 	       	$form['category'] = array(
                 	'#type' => 'textfield',
                 	'#title' => 'Category',
@@ -397,15 +404,19 @@ function cassie_admin_page($form, &$form_state){
                 	'#title' => 'Product',
                 	'#attributes' => array('class' => array('hidevaluetext')),
         	);
-		$form['image'] = array(
+		$form['image_link'] = array(
                 	'#type' => 'textfield',
                 	'#title' => 'Imagelink',
                 	'#attributes' => array('class' => array('hidevaluetext')),
         	);
  		$form['priority'] = array(
-                	'#type' => 'checkboxes',
+                	'#type' => 'radios',
                 	'#title' => 'Priority',
                 	'#attributes' => array('class' => array('hidevaluetext')),
+			'#options' => array(
+				t('True'),
+				t('False'),
+			)
         	);
  		$form['amount'] = array(
                 	'#type' => 'textfield',
@@ -428,12 +439,12 @@ function cassie_admin_page($form, &$form_state){
                 	'#value' => t('Add a new product'),
                 	'#attributes' => array('id' => 'addButton'),
         	);
-
         	return $form;
 
 	}else{
                 drupal_set_title("Access denied");
-                return "You are not authorized to access this page.";
+                $output = "You are not authorised to access this page";
+		return $form;
         }
 
 }
@@ -442,7 +453,7 @@ function cassie_admin_page_submit($form, &$form_state) {
         $newproduct = array(
           'category' => $form_state['values']['category'],
           'product' => $form_state['values']['product'],
-          'image' => $form_state['values']['image'],
+          'image_link' => $form_state['values']['image_link'],
           'priority' => $form_state['values']['priority'],
           'amount' => $form_state['values']['amount'],
 	  'price' => $form_state['values']['price'],
@@ -450,6 +461,8 @@ function cassie_admin_page_submit($form, &$form_state) {
           'status' => 1,
         );
 
+
+	$GLOBALS['cassie']->addProduct($newproduct['category'], $newproduct['product'], $newproduct['price'], $newproduct['amount'], $newproduct['description'], $newproduct['image_link']);
 
 }
 
