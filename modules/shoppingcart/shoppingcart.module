@@ -33,16 +33,16 @@ function shoppingcart_block_view($delta = '') {
      case 'cart':
         $block['subject'] = t("Shopping cart");
 
-	if (isset($_SESSION['logged_as'])){
+//	if (isset($_SESSION['logged_as'])){
 		if (isset($_COOKIE['count']) && $_COOKIE['count'] > 0){
 	        	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $_COOKIE['count'] . "</span></div></a>";
 		}
 		else{
 			$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
 		}
-     	}else{
-		$block['content'] = "";
-	}
+  //   	}else{
+//		$block['content'] = "";
+//	}
 	return $block;
   }
 
@@ -57,22 +57,28 @@ function cart_page(){
 	$price = 0;
 	$amount = 0;
 	foreach ($result as $row){
-		$output .= "<tr><td><img id='shoppingCartImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] .
+		$output .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] .
 		 "</td><td>" . $row['price'] . " &#x20ac;</td><td>" . $row['amount'].
 		 " pcs.</td><td><form method='POST' action=''><input type='hidden' name='product' value='" . $row['product_id'] .
-		 "' ><button type='submit' id='deleteFromCart' class='deleteProduct' name='deleteProduct'><i class='fa fa-times'></i></button></form></td></tr>";
+		 "' ><button type='submit' id='deleteFromCart' name='deleteProduct'><i class='fa fa-times'></i></button></form></td></tr>";
         	$price += $row['price'] * $row['amount'];
 		$amount += $row['amount'];
 	}
 	$output .= "</table>";
-	delete_product();
+	delete_product_from_cart();
 	$display = "none;";
+	$info = "";
 
 	if ($amount > 0){
 		$display = "default;";
 	}
 
-	$output .= "<div id='total'>Total price: " . $price . " &#x20ac; <br>Items in cart: " . $amount . " pcs.".
+	if (!isset($_SESSION['logged_as'])){
+		$display = "none";
+		$info = "Login first to checkout.";
+	}
+
+	$output .= "<div id='total'>Total price: " . $price . " &#x20ac; <br>Items in cart: " . $amount . " pcs.<br><br><span id='info'>". $info . "</span>" .
 		"<form method='POST' action=''><br><button id='checkout' style='display:" .$display . "' type='submit' name='checkout'>Checkout <i class='fa fa-money fa-lg'></i></button></div>";
 
 	checkout();
@@ -80,11 +86,12 @@ function cart_page(){
 
 }
 
-function delete_product(){
+function delete_product_from_cart(){
 	if (isset($_POST['deleteProduct'])){
 		$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
-		$count = $_COOKIE['count'];
-                setcookie("count", $count - 1, time()+3600, '/');
+		$count = $_COOKIE['count'] - 1;
+
+		setcookie("count", $count - 1, time()+3600, '/');
 
 		header("Refresh:0");
                 drupal_set_message($_POST['product'] . " removed from the cart.");
@@ -101,6 +108,7 @@ function checkout(){
 		}
 
 		setcookie("count", "", time()-3600);
+
 		header("Refresh:0");
 		drupal_set_message("Checkout was succesfull!");
 	}

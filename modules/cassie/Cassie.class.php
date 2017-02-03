@@ -1,5 +1,6 @@
 
 <?php
+
 class Cassie{
 
 	//Declare array of global variables needed to connect to Cassandra
@@ -27,10 +28,27 @@ class Cassie{
 		));
 	}
 
+	public function testProduct(){
+		$newProduct = new Product("test", "test", 10.5, "test", "test", 10);
+	//	$newProduct = __construct("test", "test", 10.5, "test", "test", 10);
+		$statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "INSERT INTO products
+                           (category_id, product_id, price, amount, description, image_link, high_priority_segment)
+                             VALUES ('$newProduct->category_id', '$newProduct->product_id', $newProduct->price, $newProduct->amount, '$newProduct->description', '$newProduct->image_link', false)"));
+
+	}
+	 //Gets all distinct categories
+        public function getCategories(){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                        ("SELECT DISTINCT category_id FROM products"));
+                return $result;
+        }
+
+
 	//Gets all products for single category page with defined priority
 	public function getProducts($page_id){
 		$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
-			("SELECT product_id, price, description, image_link FROM products 
+			("SELECT category_id, product_id, price, amount, description, image_link FROM products 
 				WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
 		return $result;
 	}
@@ -317,13 +335,23 @@ class Cassie{
         }
 
 
-	//update products checkout when paid
+	//delete product from database
          public function deleteProduct($category_id, $product_id){
                 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
                         "DELETE FROM products WHERE category_id = '$category_id' AND product_id = '$product_id'"));
         }
 
 
+	 //update product in database
+         /*public function deleteProduct($category_id, $product_id){
+                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "U FROM products WHERE category_id = '$category_id' AND product_id = '$product_id$
+        }*/
+
+	public function updateProduct($category_id1, $product_id1, $category_id, $product_id, $price, $amount, $description, $image_link){
+		self::deleteProduct($category_id1, $product_id1);
+		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link);
+	}
 
 }
 ?>

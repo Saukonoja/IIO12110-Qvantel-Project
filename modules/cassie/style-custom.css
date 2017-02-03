@@ -63,6 +63,11 @@ img.productImage{
 	width: 100%;
 }
 
+#adImageHeader{
+	width: 300px;
+	display: block;
+}
+
 #block-cassie-ad{
 	margin: -20px;
 	border: 1px solid transparent;

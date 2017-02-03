@@ -1,14 +1,15 @@
 var msUntilStart;
 var msUntilEnd;
 
-$(document).ready(function() {
+jQuery(document).ready(function($) {
 	var start = new Date();
 	msUntilStart = start.getTime();
 	//alert("<?php echo $_SESSION["timeListIndex"]; ?>");
+	//alert("js pyorii!");
 });
 
-window.onbeforeunload = function(){	  			
+window.onbeforeunload = function(){
 	var end = new Date();
 	msUntilEnd = end.getTime();
-	$.get( "timelogger.php", {time: msUntilEnd-msUntilStart});
+	$.get( "timer", {time: msUntilEnd-msUntilStart});
 }
