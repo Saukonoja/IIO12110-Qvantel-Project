@@ -1,0 +1,40 @@
+*** Settings ***
+Resource    resource.robot
+Library    Selenium2Library
+Library    FakerLibrary
+
+*** Variables ***
+
+*** Keywords ***
+
+*** Test Cases ***
+
+Check Shopping Cart
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    asd    asd
+    Send Form
+    Page Should Contain    Hello asd!
+    Logged In User Should Have Shopping Cart    /jackets    /pants    /phones
+    Close Browser
+
+Shopping Cart & Check Out
+    Open Index Page
+    Set Browser Implicit Wait    8 seconds
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    asd    asd
+    Send Form
+    Page Should Contain    Hello asd!
+    Go To Phones Page
+    Wait And Check If Page Contains    Phones
+    Click Image    http://www.setup2repair.co.uk/resources/images/devices/iPhone-6S-Silver.png
+    Wait Until Page Contains Element    addToCart
+    Page Should Contain Element    addToCart
+    Click Button    addToCart
+    Wait until Page Contains Element    count
+    Wait until Element Contains    count    1
+    Element Should Contain    count    1
+    Close Browser
+

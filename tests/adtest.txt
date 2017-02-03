@@ -1,0 +1,22 @@
+*** Settings ***
+Resource    resource.robot
+Library    Selenium2Library
+Library    FakerLibrary
+
+*** Keywords ***
+
+*** Variables ***
+
+*** Test Cases ***
+
+AdTest1, Finnish language
+    Open Index Page
+    Commercial Test    fiFlag    adImage    https://i.imgur.com/fgLzYTb.png
+    Close Browser
+
+AdTest2, Russian language
+    Open Index Page
+    Commercial Test    ruFlag    adImage    https://i.imgur.com/ptPEDFK.png
+    Close Browser
+
+

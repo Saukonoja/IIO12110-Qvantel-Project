@@ -1,0 +1,46 @@
+*** Settings ***
+Resource    resource.robot
+Library    Selenium2Library
+Library    FakerLibrary
+
+*** Variables ***
+${TEST_CATEGORY}	jackets
+${TEST_IMAGE}		https://store.thinksai.com/images/clipart/Safety%20First/Warning/Vertical/warnV031%20-%20do%20not%20touch%20under%20test.jpg
+${TEST_AMOUNT}		19
+${TEST_PRICE}		69
+*** Test Cases ***
+
+Admin User Can Go To Admin Page
+    Open Index Page
+    Admin Sign In
+    Manage Page Check
+    Close Browser
+
+Admin User Can Add Content To Webstore
+    Open Index Page
+    Admin Sign In
+    Manage Page Check
+    ${TEST_NAME}=    Name
+    ${TEST_DESCR}=    Text    max_nb_chars=30
+
+    Wait Until Page Contains Element    edit-category
+    Input Text    edit-category    ${TEST_CATEGORY}
+    Input Text    edit-product    ${TEST_NAME}
+    Input Text    edit-image-link    ${TEST_IMAGE}
+    Input Text    edit-amount    ${TEST_AMOUNT}
+    Input Text    edit-price    ${TEST_PRICE}
+    Input Text    edit-description    ${TEST_DESCR}
+    Capture Page Screenshot
+    Wait Until Page Contains Element    addButton
+    Click Button    addButton
+    Go To Jackets Page
+    Wait Until Page Contains Element    productName
+    Wait Until Page Contains    ${TEST_NAME}
+    Page Should Contain    ${TEST_NAME}
+    Wait Until Page Contains    ${TEST_DESCR}
+    Page Should Contain    ${TEST_DESCR}
+    Page Should Contain Image    ${TEST_IMAGE}
+    Wait Until Page Contains    ${TEST_PRICE} €
+    Page Should Contain    ${TEST_PRICE}
+
+    Close Browser

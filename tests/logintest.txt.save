@@ -1,0 +1,87 @@
+*** Settings ***
+Resource	resource.robot
+Library		Selenium2Library
+Library		FakerLibrary
+
+*** Variables***
+
+*** Keywords ***
+
+*** Test Cases ***
+
+Registration
+    Open Index Page
+    Register New User
+
+Register, Login
+    ${TEST_USERNAME}=    User Name
+    ${TEST_PASSWORD}=    Password
+    Open Index Page
+    Go To Register Page
+    Wait And Check If Page Contains    Registration
+    Input Name And Password    ${TEST_USERNAME}    ${TEST_PASSWORD}
+    Send Form
+    Wait And Check If Page Contains    Registration was succesfull!
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    ${TEST_USERNAME}    ${TEST_PASSWORD}
+    Send Form
+    Wait And Check If Page Contains    Welcome to Webstore, ${TEST_USERNAME}
+    Capture Page Screenshot
+    Close Browser
+
+Login, Logout
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    asd    asd
+    Send Form
+    Page Should Contain    Hello asd!
+    Wait Until Page Contains Element    //*[@name='logout']
+    Page Should Contain Element    //*[@name='logout']
+    Submit Form    //*[@name='logout']
+    Wait Until Page Contains    Welcome to Webstore
+    Page Should Contain    Welcome to Webstore
+    Close Browser
+
+Login Test1, Valid Credentials
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    asd    asd
+    Send Form
+    Close Browser
+
+Login Test2, Invalid Credentials
+    Open Index Page
+    Go To Login Page
+    Input Name And Password    hot    tomale
+    Send Form
+    Wait And Check If Page Contains    Username or password is invalid
+    Close Browser
+
+Login Test3, Invalid Password
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    asd    wrongpassword
+    Send Form
+    Page Should Contain    Username or password is invalid
+    Close Browser
+Login Test4, Invalid Username
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Input Name And Password    wronguser    asd
+    Send Form
+    Wait And Check If Page Contains    Username or password is invalid!
+    Close Browser
+
+Login Test5, Without Credentials
+    Open Index Page
+    Go To Login Page
+    Wait And Check If Page Contains    Login
+    Send Form
+    Wait And Check If Page Contains    Fill fields first
+    Close Browser
+

@@ -1,0 +1,16 @@
+*** Settings ***
+Resource    resource.robot
+Library    Selenium2Library
+Library    FakerLibrary
+
+*** Variables ***
+
+*** Keywords ***
+
+*** Test Cases ***
+
+Rule Engine Test1, High Priority Customer
+    Open Index Page
+    High Priority Customer    /phones    Iphone GOLD    http://elon.ae/oc-content/uploads/1/165_original.jpg
+    Close Browser
+

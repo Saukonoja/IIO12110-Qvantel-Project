@@ -1,0 +1,130 @@
+*** Settings ***
+Resource    resource.robot
+Library    Selenium2Library
+Library    FakerLibrary
+
+*** Variables ***
+
+*** Keywords ***
+
+*** Test Cases ***
+
+Navigation Bar Works On Áll Sites
+    Delay    0.1
+    Open Index Page
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /login/
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /registration
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /jackets
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /pants
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+
+    Click Link    /phones
+    Wait Until Page Contains    User login
+    Page Should Contain Link    /login/
+    Page Should Contain Link    /registration
+    Page Should Contain Link    /user/login
+    Wait Until Page Contains    Navigation
+    Page Should Contain Link    /jackets
+    Page Should Contain Link    /pants
+    Page Should Contain Link    /phones
+    Capture Page Screenshot
+    Close Browser
+
+Language Selection Is Visible
+    Open Index Page
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /login/
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /registration
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /user/login
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /jackets
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /pants
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
+    Click Link    /phones
+    Wait Until Page Contains Element    fiFlag
+    Page Should Contain Element    fiFlag
+    Wait Until Page Contains Element    ruFlag
+    Page Should Contain Element    ruFlag
+
