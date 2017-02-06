@@ -125,10 +125,10 @@ function cassie_menu() {
 
   $items['update'] = array(
    'title' => 'Update product',
-   'page callback' => 'update_product_page',
-   //'page callback' => 'drupal_get_form',
-   //'page arguments' => array('update_product_page'),
-   //'access arguments' => array('update_product_page'),
+   //'page callback' => 'update_product_page',
+   'page callback' => 'drupal_get_form',
+   'page arguments' => array('update_product_page'),
+   'access arguments' => array('update_product_page'),
    'access callback' => TRUE,
    'type' => MENU_CALLBACK,
   );
@@ -521,7 +521,7 @@ function add_product_page_submit($form, &$form_state) {
 	header("Refresh:0");
 }
 
-function update_product_page(){
+function update_product_page($form, &$form_state){
 	if (user_access('administer')) {
 
                 $result = $GLOBALS['cassie']->getProducts("jackets", 1);
@@ -540,41 +540,8 @@ function update_product_page(){
                 }
                 $output .= "</table>";
 
-                //return $output;
-		/*$form['field_two']['#prefix'] = '<table>';
-		foreach ($result as $row){
-		//$form['field_one']['#prefix'] = '<table><tr><td>';
-		$form['field_two']['#suffix'] .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td>";
-
-		$form['field_three']['#prefix'] .= '<td></td></tr>';
-		//$form['field_three']['#suffix'] .= '</td></tr>';
-
-		$form['submit'] = array(
-                        '#type' => 'submit',
-                        '#value' => t('Update product'),
-                        '#attributes' => array('id' => 'updateProduct'),
-                );
-		}
-		$form['field_three']['#suffix'] = '</table>';
-
-		/*$form['submit'] = array(
-                        '#type' => 'submit',
-                        '#value' => t('Update product'),
-                        '#attributes' => array('id' => 'updateProduct'),
-                );
-
-		foreach ($result as $row) {
- 			 $form['image'] .= array(
-    				'#prefix' => t("<img id='productImage' src='" . $row['image_link'] . "'/>"),
-    				//'#name' => $key, // TODO: define it with the $key variable.
-    				//'#options' => $options,
-  			);
-		}*/
-	  	//$output .= render($form);
 		update_product();
-  		return $output;
-
-                //return $form;
+  		return $form;
 
 	}else{
 		drupal_set_title("Access denied");

@@ -254,29 +254,6 @@ class Cassie{
 		}
 		return $boo;
         }
-/*	//Insert product into users cart
-	 public function cartProduct($uuid, $product_id, $price){
-                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "UPDATE users_cart SET amount = amount + 1 WHERE uuid = $uuid AND product_id = '$product_id' AND price = $price"));
-        }
-	//Select all contents of single users cart
-	public function getCartContents($uuid){
-                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "SELECT * FROM users_cart WHERE uuid = $uuid"));
-		return $result;
-        }
-	//Insert product into registered users cart
-        public function cartRegisteredProduct($username, $product_id, $price){
-                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "UPDATE reg_users_cart SET amount = amount + 1 WHERE username = '$username' AND product_id = '$product_id' AND price = $price"));
-        }
-	 //Select all contents of single users cart
-        public function getRegisteredCartContents($username){
-                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "SELECT * FROM reg_users_cart WHERE username = $username"));
-                return $result;
-        }
-*/
 	 //insert product to users shopping cart
         public function cartProduct($uuid, $product_id, $price, $image_link){
 		 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
