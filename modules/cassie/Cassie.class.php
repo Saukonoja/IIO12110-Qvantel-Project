@@ -344,6 +344,6 @@ class Cassie{
 		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio);
 	}
 
-
+	//Change to test scripted push
 }
 ?>
