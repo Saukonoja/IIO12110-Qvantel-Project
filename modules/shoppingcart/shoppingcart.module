@@ -89,7 +89,7 @@ function cart_page(){
 function delete_product_from_cart(){
 	if (isset($_POST['deleteProduct'])){
 		$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
-		$count = $_COOKIE['count'] - 1;
+		$count = $_COOKIE['count'];
 
 		setcookie("count", $count - 1, time()+3600, '/');
 

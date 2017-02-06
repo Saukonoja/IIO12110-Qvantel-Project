@@ -10,7 +10,7 @@ class Cassie{
 		'session' => null
 	);
 
-	//Connect to local Cassandra cluster and keuspace 'Drupal'
+	//Connect to local Cassandra cluster and keyspace 'Drupal'
 	public function connect(){
 		$GLOBALS['cluster'] = Cassandra::cluster()
 				->withContactPoints('172.31.19.110', '172.31.48.120')
@@ -46,10 +46,17 @@ class Cassie{
 
 
 	//Gets all products for single category page with defined priority
-	public function getProducts($page_id){
-		$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
-			("SELECT category_id, product_id, price, amount, description, image_link FROM products 
-				WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
+	public function getProducts($page_id, $prio){
+		if ($prio == 1){
+			$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+				("SELECT category_id, product_id, price, amount, description, image_link, high_priority_segment FROM products 
+					WHERE category_id = '$page_id'"));
+		}else {
+			$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, price, amount, description, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
+
+		}
 		return $result;
 	}
 
@@ -327,11 +334,18 @@ class Cassie{
 
 
 	 //add new product to database
-         public function addProduct($category_id, $product_id, $price, $amount, $description, $image_link){
-                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "INSERT INTO products 
-			   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
-			     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', false)"));
+         public function addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio){
+		if ($prio == 1){
+                	$statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        	"INSERT INTO products 
+				   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
+				     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', true)"));
+		}else{
+			 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                                "INSERT INTO products
+                                   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
+                                     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', false)"));
+		}
         }
 
 
@@ -348,10 +362,11 @@ class Cassie{
                         "U FROM products WHERE category_id = '$category_id' AND product_id = '$product_id$
         }*/
 
-	public function updateProduct($category_id1, $product_id1, $category_id, $product_id, $price, $amount, $description, $image_link){
+	public function updateProduct($category_id1, $product_id1, $category_id, $product_id, $price, $amount, $description, $image_link, $prio){
 		self::deleteProduct($category_id1, $product_id1);
-		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link);
+		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio);
 	}
+
 
 }
 ?>
