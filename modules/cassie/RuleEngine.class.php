@@ -14,26 +14,26 @@
 
             public function init($visits, $language) {
 
-                $segmentTargeting = self::SegmentTargeting($visits, $language);
+                $segmentTargeting = self::SegmentTargeting(self::getSettings(), $visits, $language);
                 return $segmentTargeting;
-            }
+		
+		}
 
-            public function SegmentTargeting($visits, $language) {
+            public function SegmentTargeting($settings, $visits, $language) {
 	       //target certain items for user viewing based on standalone parameters
                 //if parameter1 == smth, target this item1 for presentation
                 //if parameter2 == smth, target this item2 for presentation
 
 		$Segments = array(
                 	"priorityHigh" => 0,
-                	"slavic" => 0,
 			"advertTop" => 1,
               	  	"advertSide" => 1
 	            );
 
 
-                if( $visits >= 5){
+                if( $visits >= 5 && $settings["highPriority"]){
                     $Segments["priorityHigh"] =1;
-                }
+                 }
 
                 if($language == "fi"){   //Decides which advert to show, 1 for finnish, 2 for ruskiy
                 	$Segments["advertSide"] = 1;
@@ -46,14 +46,31 @@
 		return $Segments;
             }
 
-            public function trackBrowsingSpeed(){
-                //options for tracking browsing times on a certain page
-                //and multiple quick changes of page
-            }
-
             public function launchHelper(){
                 //result of fast page changing in the webstore
             }
+	    
+	    public function getSettings(){
+		$GLOBALS['cassie'] = new Cassie();
+		$GLOBALS['cassie']->connect();
+		
+		$results = $GLOBALS['cassie']->getSettings();
+		$settings = array(
+			"highPriority" => false,
+			"climate" => false,
+			);
+
+		foreach ($results as $row){
+			$temp = $row['enabled'];
+			//foreach($settings as $k => $v){
+			//	$v = $temp;
+			//}
+			if($row['rule_name'] == "priority"){
+				$settings["highPriority"] = $temp;
+			}
+		}
+		return $settings;
+	    }
 	}
 
 

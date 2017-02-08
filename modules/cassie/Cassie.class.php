@@ -344,6 +344,25 @@ class Cassie{
 		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio);
 	}
 
-	//Change to test scripted push
+	//Enable specific rule
+	public function enableRule($rule_name){
+                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "INSERT INTO rule_settings (rule_name, enabled) VALUES ('$rule_name', true)"));
+        }
+
+	//Disable specific rule
+        public function disableRule($rule_name){
+                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "INSERT INTO rule_settings (rule_name, enabled) VALUES ('$rule_name', false)"));
+        }
+
+	//Get state of specific rule
+        public function getSettings(){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT * FROM rule_settings"));
+                return $result;
+        }
+
+
 }
 ?>
