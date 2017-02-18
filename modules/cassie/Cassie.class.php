@@ -3,6 +3,7 @@
 
 class Cassie{
 
+
 	//Declare array of global variables needed to connect to Cassandra
 	public $GLOBALS = array(
 		'cluster' => null,
@@ -29,14 +30,73 @@ class Cassie{
 	}
 
 	public function testProduct(){
-		$newProduct = new Product("test", "test", 10.5, "test", "test", 10);
+	//	$newProduct = new Product("test", "test", 10.5, "test", "test", 10);
 	//	$newProduct = __construct("test", "test", 10.5, "test", "test", 10);
-		$statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "INSERT INTO products
-                           (category_id, product_id, price, amount, description, image_link, high_priority_segment)
-                             VALUES ('$newProduct->category_id', '$newProduct->product_id', $newProduct->price, $newProduct->amount, '$newProduct->description', '$newProduct->image_link', false)"));
+	//	$statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+        //              "INSERT INTO products
+        //                 (category_id, product_id, price, amount, description, image_link, high_priority_segment)
+        //                   VALUES ('$newProduct->category_id', '$newProduct->product_id', $newProduct->price, $newProduct->amount, '$newProduct->description', '$newProduct->image_link', false)"));
 
 	}
+
+	 public function testGetProducts($page_id){
+                        $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, country_segment, price, amount, description_fi, description_ru, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id'"));
+
+                return $result;
+        }
+	//get all product with category and ru language
+	public function getProductsRu($page_id, $prio){
+                $arrayObj = array();
+                if ($prio == 1){
+                        $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, country_segment, price, amount, description_ru, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id'"));
+                        foreach($result as $row){
+                                $product = new Product($row['category_id'], $row['product_id'], $row['price'], $row['image_link'], $row['description_ru'], $row['amount'], $row['high_priority_segment'], $row['country_segment']);
+                                $arrayObj[] = $product;
+                        }
+                }else {
+                        $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, country_segment, price, amount, description_ru, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
+                        foreach($result as $row){
+                                $product = new Product($row['category_id'], $row['product_id'], $row['price'], $row['image_link'], $row['description_ru'], $row['amount'], $row['high_priority_segment'], $row['country_segment']);
+                                $arrayObj[] = $product;
+                        }
+
+
+                }
+                return $arrayObj;
+        }
+
+	 //get all product with category and fi language
+        public function getProductsFi($page_id, $prio){
+                $arrayObj = array();
+                if ($prio == 1){
+                        $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, country_segment, price, amount, description_fi, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id'"));
+                        foreach($result as $row){
+                                $product = new Product($row['category_id'], $row['product_id'], $row['price'], $row['image_link'], $row['description_fi'], $row['amount'], $row['high_priority_segment'], $row['country_segment']);
+                                $arrayObj[] = $product;
+                        }
+                }else {
+                        $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
+                                ("SELECT category_id, product_id, country_segment, price, amount, description_fi, image_link, high_priority_segment FROM products
+                                        WHERE category_id = '$page_id' AND high_priority_segment = false ALLOW FILTERING"));
+                        foreach($result as $row){
+                                $product = new Product($row['category_id'], $row['product_id'], $row['price'], $row['image_link'], $row['description_fi'], $row['amount'], $row['high_priority_segment'], $row['country_segment']);
+                                $arrayObj[] = $product;
+                        }
+
+
+                }
+                return $arrayObj;
+        }
+
+
 	 //Gets all distinct categories
         public function getCategories(){
                 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
@@ -46,7 +106,7 @@ class Cassie{
 
 
 	//Gets all products for single category page with defined priority
-	public function getProducts($page_id, $prio){
+	/*public function getProducts($page_id, $prio){
 		if ($prio == 1){
 			$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
 				("SELECT category_id, product_id, price, amount, description, image_link, high_priority_segment FROM products 
@@ -58,7 +118,7 @@ class Cassie{
 
 		}
 		return $result;
-	}
+	}*/
 
 	//Gets all products for single category page with defined priority
         public function getTest($page_id, $os, $priority){
@@ -111,7 +171,7 @@ class Cassie{
 	//Gets all info needed to show to client of a product
         public function getProductInfo($product_id){
                 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement
-                        ("SELECT product_id, price, description, image_link FROM products
+                        ("SELECT product_id, price, description_fi, description_ru, image_link FROM products
                                 WHERE product_id = '$product_id' ALLOW FILTERING"));
                 return $result;
         }
@@ -133,7 +193,7 @@ class Cassie{
 
 	//Updates visit counter with user identification. Is used to promote users to HIGH_PRIORITY
 	public function updateVisits($uuid, $page_id){
-		$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(	
+		$result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
 			"UPDATE visits SET count = count + 1 WHERE uuid = $uuid AND page_id = '$page_id'"));
 		return $result;
 	}
@@ -148,7 +208,7 @@ class Cassie{
 	//Updates table 'movements' which tracks clients movements between pages
 	public function updateMovements($uuid, $source_page_id, $dest_page_id){
                 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "UPDATE movements SET count = count + 1 
+                        "UPDATE movements SET count = count + 1
 				WHERE uuid = $uuid AND source_page_id = '$source_page_id' AND dest_page_id = '$dest_page_id'"));
                 return $result;
         }
@@ -311,18 +371,33 @@ class Cassie{
 
 
 	 //add new product to database
-         public function addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio){
+        /* public function addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio, $country_segment){
 		if ($prio == 1){
                 	$statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        	"INSERT INTO products 
-				   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
-				     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', true)"));
+                        	"INSERT INTO products
+				   (category_id, product_id, country_segment, price, amount, description, image_link, high_priority_segment)
+				     VALUES ('$category_id', '$product_id', '$country_segment', $price, $amount, '$description', '$image_link', true)"));
 		}else{
 			 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
                                 "INSERT INTO products
-                                   (category_id, product_id, price, amount, description, image_link, high_priority_segment)
-                                     VALUES ('$category_id', '$product_id', $price, $amount, '$description', '$image_link', false)"));
+                                   (category_id, product_id, country_segment, price, amount, description, image_link, high_priority_segment)
+                                     VALUES ('$category_id', '$product_id', '$country_segment', $price, $amount, '$description', '$image_link', false)"));
 		}
+        }*/
+
+	//add new product to database
+         public function addProduct($category_id, $product_id, $price, $amount, $description_fi, $description_ru, $image_link, $prio, $country_segment){
+                if ($prio == 1){
+                        $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                                "INSERT INTO products
+                                   (category_id, product_id, country_segment, price, amount, description_fi, description_ru, image_link, high_priority_segment)
+                                     VALUES ('$category_id', '$product_id', '$country_segment', $price, $amount, '$description_fi', '$description_ru', '$image_link', true)"));
+                }else{
+                         $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                                "INSERT INTO products
+                                   (category_id, product_id, country_segment, price, amount, description_fi, description_ru, image_link, high_priority_segment)
+                                     VALUES ('$category_id', '$product_id', '$country_segment', $price, $amount, '$description_fi', '$description_ru', '$image_link', false)"));
+                }
         }
 
 
@@ -339,9 +414,9 @@ class Cassie{
                         "U FROM products WHERE category_id = '$category_id' AND product_id = '$product_id$
         }*/
 
-	public function updateProduct($category_id1, $product_id1, $category_id, $product_id, $price, $amount, $description, $image_link, $prio){
+	public function updateProduct($category_id1, $product_id1, $category_id, $product_id, $price, $amount, $description_fi, $description_ru, $image_link, $prio, $country){
 		self::deleteProduct($category_id1, $product_id1);
-		self::addProduct($category_id, $product_id, $price, $amount, $description, $image_link, $prio);
+		self::addProduct($category_id, $product_id, $price, $amount, $description_fi, $description_ru, $image_link, $prio, $country);
 	}
 
 	//Enable specific rule
@@ -361,6 +436,43 @@ class Cassie{
                 $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
                         "SELECT * FROM rule_settings"));
                 return $result;
+        }
+
+	public function getRule($rule_name){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT * FROM rule_settings WHERE rule_name = '$rule_name'"));
+		$row = $result->first();
+                $boo = $row['enabled'];
+		if ($boo == true){
+			return 1;
+		}else{
+			return 0;
+		}
+
+        }
+
+	//Get state of specific rule
+        public function getCountries(){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT * FROM rule_settings"));
+                return $result;
+        }
+
+	//Get state of specific rule
+        public function getUserCountry($uuid){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT country FROM segment_users WHERE uuid = $uuid"));
+                $row = $result->first();
+		$country = $row['country'];
+		return $country;
+        }
+	//Get state of specific rule
+        public function getUserAgent($uuid){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT os_segment FROM segment_users WHERE uuid = $uuid"));
+                $row = $result->first();
+                $country = $row['os_segment'];
+                return $country;
         }
 
 

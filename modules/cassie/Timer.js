@@ -11,5 +11,5 @@ jQuery(document).ready(function($) {
 window.onbeforeunload = function(){
 	var end = new Date();
 	msUntilEnd = end.getTime();
-	jQuery.get( "time", {time: msUntilEnd-msUntilStart});
+	jQuery.get( "timer", {time: msUntilEnd-msUntilStart});
 }

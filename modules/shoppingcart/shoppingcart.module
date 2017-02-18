@@ -1,5 +1,6 @@
 <?php
 
+include_once drupal_get_path('module', 'cassie').'/Cassie.class.php';
 
 $GLOBALS['cassie'] = new Cassie();
 $GLOBALS['cassie']->connect();

@@ -5,22 +5,26 @@
 		public $price;
 		public $image_link;
 		public $description;
+		//public $description_ru;
 		public $amount;
-		//public $priority;
+		public $priority;
 		//public $times_viewed;
 		//public $times_purchased;
 		//public $os_segment;
-		//public $country_segment;
+		public $country_segment;
 		//public $age_segment;
 		//public $wealth_segment;
 
-		public function __construct($category_id, $product_id, $price, $image_link, $description, $amount){
+		public function __construct($category_id, $product_id, $price, $image_link, $description, $amount, $priority, $country_segment){
 			$this->category_id = $category_id;
 			$this->product_id = $product_id;
 			$this->price = $price;
 			$this->image_link = $image_link;
 			$this->description = $description;
+			//$this->description_ru = $description_ru;
 			$this->amount = $amount;
+			$this->priority = $priority;
+			$this->country_segment = $country_segment;
 		}
 
 		/*public function getCategory_id(){

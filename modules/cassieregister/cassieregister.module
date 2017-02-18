@@ -1,5 +1,6 @@
 <?php
-//include drupal_get_path('module', 'cassie').'/Cassie.class.php';
+
+include_once drupal_get_path('module', 'cassie').'/Cassie.class.php';
 
 $GLOBALS['cassie'] = new Cassie();
 $GLOBALS['cassie']->connect();
@@ -7,7 +8,7 @@ $GLOBALS['cassie']->connect();
 
 function cassieregister_menu(){
 	$items['registration'] = array(
-    	  'title' => 'Registration',
+    	  'title' => 'Rekisteröidy',
     	  'page callback' => 'drupal_get_form',
 	  'page arguments' => array('cassieregister_registration_page'),
 	  'access arguments' => array('cassieregister_registration_page'),
@@ -16,7 +17,7 @@ function cassieregister_menu(){
 	);
 
 	$items['login'] = array(
-	  'title' => 'Login',
+	  'title' => 'Kirjaudu sisään',
 	  'page callback' => 'drupal_get_form',
 	  'page arguments' => array('cassieregister_login_page'),
 	  'access arguments' => array('cassieregister_login_page'),
@@ -80,14 +81,17 @@ function log_out(){
 }*/
 
 function cassieregister_login_page($form, &$form_state){
+	change_title("Kirjaudu sisään", "войдите в систему");
+
+	$array = change_labels();
         $form['name'] = array(
                 '#type' => 'textfield',
-                '#title' => 'Username',
+                '#title' => $array[0],
                 '#attributes' => array('class' => array('hidevaluetext')),
         );
         $form['pass'] = array(
                 '#type' => 'password',
-                '#title' => 'Password',
+                '#title' => $array[1],
                 '#attributes' => array('class' => array('hidevaluetext')),
         );
         //$form['mail'] = array(
@@ -97,7 +101,7 @@ function cassieregister_login_page($form, &$form_state){
 
         $form['submit'] = array(
                 '#type' => 'submit',
-                '#value' => t('Login'),
+                '#value' => t($array[2]),
 		'#attributes' => array('id' => 'loginButton'),
         );
 
@@ -145,14 +149,17 @@ function cassieregister_login_page_submit($form, &$form_state) {
 
 
 function cassieregister_registration_page($form, &$form_state){
+	change_title("Rekisteröidy", "регистр");
+
+	$array = change_labels();
 	$form['name'] = array(
 		'#type' => 'textfield',
-		'#title' => 'Username',
+		'#title' => $array[0],
 		'#attributes' => array('class' => array('hidevaluetext')),
 	);
 	$form['pass'] = array(
 		'#type' => 'password',
-		'#title' => 'Password',
+		'#title' => $array[1],
 		'#attributes' => array('class' => array('hidevaluetext')),
 	);
 	//$form['mail'] = array(
@@ -162,7 +169,7 @@ function cassieregister_registration_page($form, &$form_state){
 
 	$form['submit'] = array(
 		'#type' => 'submit',
-		'#value' => t('Create a new account'),
+		'#value' => t($array[3]),
 		'#attributes' => array('id' => 'registerButton'),
 	);
 
@@ -188,7 +195,23 @@ function cassieregister_registration_page_submit($form, &$form_state) {
         }
 }
 
+function change_labels(){
+	$cookie = get_cookie();
+	$array = array();
 
+	if ($cookie[1] == "fi"){
+		$array[0] = "Käyttäjätunnus";
+		$array[1] = "Salasana";
+		$array[2] = "Kirjaudu";
+		$array[3] = "Rekisteröidy";
+	}else{
+		$array[0] = "имя пользователя";
+		$array[1] = "пароль";
+		$array[2] = "войти";
+		$array[3] = "регистр";
+	}
+	return $array;
+}
 
 
 
