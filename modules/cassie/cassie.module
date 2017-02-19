@@ -89,21 +89,21 @@ function cassie_menu() {
   );
 
   $items['pants'] = array(
-    'title' => 'Housut',
+    'title' => 'Pants',
     'page callback' => 'pants_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
   $items['jackets'] = array(
-    'title' => 'Takit',
+    'title' => 'Jackets',
     'page callback' => 'jackets_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
   $items['phones'] = array(
-    'title' => 'Puhelimet',
+    'title' => 'Phones',
     'page callback' => 'phones_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
@@ -292,9 +292,6 @@ function get_products(){
 	$page = substr(strrchr($address, '/'), 1);
 	$test = true;
 	$cookie = get_cookie();
-	//$result2 = $GLOBALS['cassie']->getProductsByOs($page, "Android");
-	//$os = get_user_agent();
-	//$result3 = $GLOBALS['cassie']->getTest($page, "iPhone", true);
 
 	$output = "<div>";
 	$i = 0;
@@ -304,21 +301,9 @@ function get_products(){
 	$segments = $GLOBALS['rule']->init($visits, 1, $GLOBALS['cassie']->getUserCountry($cookie[0]));
 	$highpriority = $segments['priorityHigh'];
 
-	//$result = $GLOBALS['cassie']->getProducts($page, $highpriority);
-
-	$selectSort = "";
-	$lowToHigh = "";
-	$highToLow = "";
-
 	if ($cookie[1] == "fi"){
-		$selectSort = "Lajittele";
-		$lowToHigh = "Halvimmasta kalleimpaan";
-		$highToLow = "Kalleimmasta halvimpaan";
 		$result = $GLOBALS['cassie']->getProductsFi($page, $highpriority);
 	}else{
-		$selectSort = "сортировать по";
-                $lowToHigh = "от низкого до высокого";
-                $highToLow = "от высокой к низкой";
 		$result = $GLOBALS['cassie']->getProductsRu($page, $highpriority);
 	}
 	$sort = sortItems();
@@ -343,9 +328,9 @@ function get_products(){
 
 	$output .= "<form method='post' action=''><select name='sort' id='sort'>";
 
-        $output .= "<option " . $selectedPriceAsc . " value='priceAsc'>" . $lowToHigh  . "</option>".
-        	   "<option " . $selectedPriceDesc . " value='priceDesc'>" . $highToLow  ."</option>".
-		   "<input type='submit' class='setSort' value='" . $selectSort . "' /></select></form><br><br>";
+        $output .= "<option " . $selectedPriceAsc . " value='priceAsc'>Halvimmasta kalleimpaan</option>".
+        	   "<option " . $selectedPriceDesc . " value='priceDesc'>Kalleimmasta halvimpaan</option>".
+		   "<input type='submit' class='setSort' value='Select sort' /></select></form><br><br>";
 
 	foreach ($result as $row) {
                 $output .= "<a href='". $page . "/" . $row->product_id . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
@@ -353,33 +338,6 @@ function get_products(){
        		" &#x20ac;</p><p id='productDescription'>" . $row->description . "</div></div></a>";
        		$i++;
 	}
-
-	//echo $highpriority;
-	//echo $visits;
-	/*if ($highpriority === 1){
-		foreach ($result3 as $row) {
-                	$output .= "<a href='". $page . "/" . $row['product_id'] . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
-                 	. $row['image_link'] . "'/><p id='productName'>" . $row['product_id'] . "</p><p id='productPrice'>" . $row['price'] .
-                	" &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
-                	$i++;
-        	}
-	}*/
-
-
-/*        foreach ($result as $row) {
-                $output .= "<a href='". $page . "/" . $row['product_id'] . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
-		 . $row['image_link'] . "'/><p id='productName'>" . $row['product_id'] . "</p><p id='productPrice'>" . $row['price'] .
-		" &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
-		$i++;
-        }
-/*
-	foreach ($result2 as $row) {
-                $output .= "<a href='". $page . "/" . $row['product_id'] . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
-                 . $row['image_link'] . "'/><p id='productName'>" . $row['product_id'] . "</p><p id='productPrice'>" . $row['price'] .
-                " &#x20ac;</p><p id='productDescription'>" . $row['description'] . "</div></div></a>";
-                $i++;
-        }
-*/
         $output .= "</div>";
 
 	return $output;
@@ -415,32 +373,22 @@ function check_user_agent(){
 	return $os;
 }
 
-function change_title($value_fi, $value_ru){
-	$cookie = get_cookie();
-
-        if ($cookie[1] == "fi"){
-                drupal_set_title($value_fi);
-        }else{
-                drupal_set_title($value_ru);
-        }
-}
-
 function phones_page(){
 	updateCounter();
-	change_title("Puhelimet", "телефоны");
-	//$GLOBALS['cassie']->testProduct();
 	return get_products();
 }
 
 function pants_page() {
 	updateCounter();
-	change_title("Housut", "брюки");
-	return get_products();
+	//return get_products();
+
+	echo  $_SESSION["timeListIndex"];
+        echo  $_SESSION["page1_time"];
+	return "housut";
 }
 
 function jackets_page(){
 	updateCounter();
-	change_title("Takit", "жакеты");
 	return get_products();
 }
 
@@ -454,10 +402,10 @@ function get_product_details(){
         $page = explode("/", $pageWithSubpage, 2);
 
         $productWithSpecials = substr(strrchr($address, '/'), 1);
-	$product = str_replace("%20"," ", $productWithSpecials);
-	$os = "Android";
+	      $product = str_replace("%20"," ", $productWithSpecials);
+	      $os = "Android";
 
-        $result = $GLOBALS['cassie']->getProductInfo($product);
+        $result = $GLOBALS['cassie']->getProductInfo($page[0], $product);
         $cookie = get_cookie();
         $row = $result->first();
         if ($cookie[1] == "fi"){
@@ -465,11 +413,11 @@ function get_product_details(){
         }else{
           $description = $row['description_ru'];
         }
-
+        
 	drupal_set_title($row['product_id']);
         $output = "<p id='productDetailPrice'>" . $row['price'] . " &#x20ac;</p><p id='productDetailDescription'>"
 	. $description . "</p><img id='productDetailImage' src='" . $row['image_link'] .
-  	"'><form method='POST' action=''><br><button type='submit' id='addToCart'".
+  "'><form method='POST' action=''><br><button type='submit' id='addToCart'".
 	" class='cart' name='cart'>Add to cart <i class='fa fa-arrow-right fa-lg'></i><i class='fa fa-shopping-cart fa-lg'></i></button></form>";
 	add_to_cart();
 
@@ -485,17 +433,17 @@ function check_uuid(){
 function add_to_cart(){
 	if (isset($_POST['cart'])){
 
-       		$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+ 		$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
-        	$pageUnparsed = explode("/", $address, 3);
-        	$pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
-        	$page = explode("/", $pageWithSubpage, 2);
+  	$pageUnparsed = explode("/", $address, 3);
+  	$pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
+  	$page = explode("/", $pageWithSubpage, 2);
 
 		$cookie = get_cookie();
 
 		$productWithSpecials = substr(strrchr($address, '/'), 1);
-        	$product = str_replace("%20"," ", $productWithSpecials);
-		$result = $GLOBALS['cassie']->getProductInfo($product);
+    $product = str_replace("%20"," ", $productWithSpecials);
+		$result = $GLOBALS['cassie']->getProductInfo($page[0], $product);
 		$row = $result->first();
 		check_uuid();
 		$GLOBALS['cassie']->cartProduct($_SESSION['uuid'], $product, $row['price'], $row['image_link']);
@@ -508,7 +456,6 @@ function add_to_cart(){
 			setcookie("count", $count + 1, time()+3600, '/');
 		}
 		drupal_set_message($product . " added to cart.");
-		header("Refresh:0");
 	}
 }
 
@@ -536,7 +483,7 @@ function updateCounter(){
 
         $page = str_replace("%20"," ", $pageWithSpecials);
 
-	if (isset($_COOKIE['location'])){
+	if (isset($_COOKIE['location'])){  
 		$cookie = get_cookie();
 
 //        if ($pageWasRefreshed ) {
@@ -575,7 +522,7 @@ function change_rules_page($form, &$form_state){
 		$form['country'] = array(
                         '#type' => 'radios',
 			'#default_value' => $country,
-                        '#title' => 'Advertisement by country',
+                        '#title' => 'Advertiment by country',
                         '#attributes' => array('class' => array('hidevaluetext')),
                         '#options' =>  array('1'=>t('True'), '0'=>t('False')),
                 );
@@ -586,6 +533,7 @@ function change_rules_page($form, &$form_state){
                         '#attributes' => array('id' => 'updateButton'),
                 );
                 return $form;
+
         }else{
                 drupal_set_title("Access denied");
                 return $form;
@@ -600,22 +548,16 @@ function change_rules_page_submit($form, &$form_state){
           'status' => 1,
         );
 
-	try{
-		if ($rules['priority'] == 0){
-			$GLOBALS['cassie']->disableRule("priority");
-		}else{
-			$GLOBALS['cassie']->enableRule("priority");
-		}
+	if ($rules['priority'] == 0){
+		$GLOBALS['cassie']->disableRule("priority");
+	}else{
+		$GLOBALS['cassie']->enableRule("priority");
+	}
 
-		if ($rules['country'] == 0){
-                	$GLOBALS['cassie']->disableRule("country");
-        	}else{
-                	$GLOBALS['cassie']->enableRule("country");
-       	 	}
-		drupal_set_message("Rules saved succesfully!");
-	}catch(Exception $e){
-                drupal_set_message($e->getMessage(), 'error');
-                $form_state['redirect'] = FALSE;
+	if ($rules['country'] == 0){
+                $GLOBALS['cassie']->disableRule("country");
+        }else{
+                $GLOBALS['cassie']->enableRule("country");
         }
 }
 
@@ -668,7 +610,7 @@ function add_product_page($form, &$form_state){
         	);
  		$form['priority'] = array(
                 	'#type' => 'radios',
-                	'#title' => 'High Priority',
+                	'#title' => 'Priority',
 			'#default_value' => '0',
                 	'#attributes' => array('class' => array('hidevaluetext')),
 			'#options' =>  array('1'=>t('True'), '0'=>t('False')),
@@ -763,7 +705,7 @@ function update_product_page(){
 		$output .= "<input type='submit' class='searchCat' value='Select a category' /></select></form>";
 
 		if (isset($_SESSION['cat'])){
-                	$result = $GLOBALS['cassie']->testGetProducts(select_category());
+                	$result = $GLOBALS['cassie']->getProducts(select_category());
                 	$output .= "<table>";
                 	foreach ($result as $row){
                         	 $output .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] . "</td>" .
@@ -882,7 +824,7 @@ function update_product_details_page($form, &$form_state){
                 );
                 $form['priority'] = array(
                         '#type' => 'radios',
-                        '#title' => 'High Priority',
+                        '#title' => 'Priority',
 			'#default_value' => $productArray[7],
                         '#attributes' => array('class' => array('hidevaluetext')),
                         '#options' =>  array('1'=>t('True'), '0'=>t('False')),
@@ -1019,16 +961,10 @@ function delete_product_page(){
 
 function delete_product(){
 	if (isset($_POST['deleteProduct'])){
-		try{
-                	$GLOBALS['cassie']->deleteProduct($_POST['category'], $_POST['product']);
+                $GLOBALS['cassie']->deleteProduct($_POST['category'], $_POST['product']);
 
-                	drupal_set_message($_POST['product'] . " deleted from the store.");
-			header("Refresh:0");
-
-		}catch(Exception $e){
-                	drupal_set_message($e->getMessage(), 'error');
-                	$form_state['redirect'] = FALSE;
-        	}
+                header("Refresh:0");
+                drupal_set_message($_POST['product'] . " deleted from the store.");
         }
 
 }

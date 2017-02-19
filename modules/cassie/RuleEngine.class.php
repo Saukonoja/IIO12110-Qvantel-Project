@@ -87,9 +87,9 @@
 			if($row['rule_name'] == "priority"){
 				$settings["highPriority"] = $boolean;
 			}
-			 if($row['rule_name'] == "country"){
-                                $settings["country"] = $boolean;
-                        }
+			if($row['rule_name'] == "country"){
+                $settings["country"] = $boolean;
+            }
 
 		}
 		return $settings;
