@@ -33,16 +33,18 @@ function shoppingcart_block_view($delta = '') {
    switch($delta){
      case 'cart':
         $block['subject'] = t("Shopping cart");
-
+//	check_uuid();
 //	if (isset($_SESSION['logged_as'])){
-		if (isset($_COOKIE['count']) && $_COOKIE['count'] > 0){
-	        	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $_COOKIE['count'] . "</span></div></a>";
-		}
-		else{
-			$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
-		}
-  //   	}else{
-//		$block['content'] = "";
+//		$result = $GLOBALS['cassie']->getRegisteredAmount($_SESSION['logged_as']);
+//	}else{
+//		$result = $GLOBALS['cassie']->getAmoung($_SESSION['uuid']);
+//	}
+//	$row = $result->first();
+//	if ($row['amount'] > 0){
+//	       	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $_COOKIE['count'] . "</span></div></a>";
+//	}
+//	else{
+//		$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
 //	}
 	return $block;
   }
@@ -52,7 +54,11 @@ function shoppingcart_block_view($delta = '') {
 
 function cart_page(){
 	check_uuid();
-	$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
+	if (isset($_SESSION['logged_as'])){
+		$result = $GLOBALS['cassie']->getRegisteredCartProducts($_SESSION['logged_as']);
+	}else{
+		$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
+	}
 
 	$output = "<table>";
 	$price = 0;
@@ -89,7 +95,12 @@ function cart_page(){
 
 function delete_product_from_cart(){
 	if (isset($_POST['deleteProduct'])){
-		$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
+		if (isset($_SESSION['logged_as'])){
+			$GLOBALS['cassie']->removeRegisteredProduct($_SESSION['logged_as'], $_POST['product']);
+		}else{
+			$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
+		}
+
 		$count = $_COOKIE['count'];
 
 		setcookie("count", $count - 1, time()+3600, '/');
@@ -102,10 +113,18 @@ function delete_product_from_cart(){
 
 function checkout(){
  	if (isset($_POST['checkout'])){
-		$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
-		foreach ($result as $row){
-			$GLOBALS['cassie']->updateCheckout($_SESSION['uuid'], $row['product_id'], $row['amount'], $row['price'], $row['image_link']);
+		if (isset($_SESSION['logged_as'])){
+			$result = $GLOBALS['cassie']->getRegisteredCartProducts($_SESSION['logged_as']);
+		}else{
+			$result = $GLOBALS['cassie']->getCartProducts($_SESSION['uuid']);
+		}
 
+		foreach ($result as $row){
+			if (isset($_SESSION['logged_as'])){
+				$GLOBALS['cassie']->updateRegisteredCheckout($_SESSION['logged_as'], $row['product_id'], $row['amount'], $row['price'], $row['image_link']);
+			}else{
+				$GLOBALS['cassie']->updateCheckout($_SESSION['uuid'], $row['product_id'], $row['amount'], $row['price'], $row['image_link']);
+			}
 		}
 
 		setcookie("count", "", time()-3600);

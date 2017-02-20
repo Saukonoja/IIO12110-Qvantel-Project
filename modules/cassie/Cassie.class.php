@@ -12,7 +12,7 @@ class Cassie{
 //Connect to local Cassandra cluster and keyspace 'Drupal'
 	public function connect(){
 		$GLOBALS['cluster'] = Cassandra::cluster()
-				->withContactPoints('172.31.19.110', '172.31.48.120')
+				->withContactPoints('172.31.19.110')
                                 ->build();
 		$GLOBALS['keyspace'] = 'drupal';
                 $GLOBALS['session'] = $GLOBALS['cluster']->connect($GLOBALS['keyspace']);
@@ -110,7 +110,7 @@ class Cassie{
 //Promotes user to HIGH_PRIORITY
 	public function promoteUser($uuid){
                 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                        "INSERT INTO segment_users (uuid, high_priority )
+                        "INSERT INTO segment_users (uuid, high_priority_segment )
                                 VALUES ($uuid, true)"));
         }
 
@@ -261,12 +261,43 @@ class Cassie{
 		return $result;
 	}
 
+//insert product to registered_users shopping cart
+    public function cartRegisteredProduct($username, $product_id, $price, $image_link){
+         $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT amount FROM registered_users_cart WHERE username = '$username' AND product_id = '$product_id'"));
+
+        $amount = 1;
+            if($result->first() !== null){
+                    $row = $result->first();
+                $amount = $row['amount'];
+                $amount = $amount + 1;
+            }
+
+            $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "INSERT INTO registered_users_cart (username, product_id, amount, price, image_link) VALUES ('$username', '$product_id', $amount, $price, '$image_link' )"));
+    }
+
+//select all products registered user has in cart
+        public function getRegisteredCartProducts($username){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT product_id, amount, price, image_link FROM registered_users_cart WHERE username = '$username'"));
+                return $result;
+        }
+
 //update products checkout when paid
 	 public function updateCheckout($uuid, $product_id, $amount, $price, $image_link){
                 $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
                         "INSERT INTO users_purchases (uuid, timeuuid, product_id, amount, price, image_link) VALUES ($uuid, now(), '$product_id', $amount, $price, '$image_link')"));
 		self::deleteCheckout($uuid, $product_id);
         }
+
+//update products checkout when paid
+         public function updateRegisteredCheckout($username, $product_id, $amount, $price, $image_link){
+                $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "INSERT INTO registered_users_purchases (username, timeuuid, product_id, amount, price, image_link) VALUES ('$username', now(), '$product_id', $amount, $price, '$image_link')"));
+                self::deleteRegisteredCheckout($username, $product_id);
+        }
+
 
 //remove product from cart
     public function removeProduct($uuid, $product_id){
@@ -283,11 +314,35 @@ class Cassie{
 			"DELETE FROM users_cart WHERE uuid = $uuid AND product_id = '$product_id'"));
 		}
         }
+//remove product from registeredcart
+    public function removeRegisteredProduct($username, $product_id){
+                $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "SELECT amount FROM registered_users_cart WHERE username = '$username' AND product_id = '$product_id'"));
+                $row = $result->first();
+                $amount = $row['amount'];
+                if($amount > 1){
+                        $amount = $amount - 1;
+                        $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "INSERT INTO registered_users_cart (username, product_id, amount) VALUES ('$username', '$product_id', $amount)"));
+                }else{
+                        $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                        "DELETE FROM registered_users_cart WHERE username = '$username' AND product_id = '$product_id'"));
+                }
+        }
+
+
 //update products checkout when paid
     public function deleteCheckout($uuid, $product_id){
             $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
                     "DELETE FROM users_cart WHERE uuid = $uuid AND product_id = '$product_id'"));
     }
+
+//update products checkout when paid
+    public function deleteRegisteredCheckout($username, $product_id){
+            $statement = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "DELETE FROM registered_users_cart WHERE username = '$username' AND product_id = '$product_id'"));
+    }
+
 
 //add new product to database
     public function addProduct($category_id, $product_id, $price, $amount, $description_fi, $description_ru, $image_link, $prio, $country_segment){
@@ -365,5 +420,26 @@ class Cassie{
             $country = $row['os_segment'];
             return $country;
     }
+
+//Get contetns of specific users user agent
+    public function getAmount($uuid){
+            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT COUNT(*) FROM users_cart WHERE uuid = $uuid"));
+            $row = $result->first();
+            $count = $row['count'];
+            return $count;
+    }
+
+//Get contetns of specific users user agent
+    public function getRegisteredAmount($username}{
+            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT COUNT(*) FROM registered_users_cart WHERE username = $username"));
+            $row = $result->first();
+            $count = $row['count'];
+            return $count;
+    }
+
+
+
 }
 ?>

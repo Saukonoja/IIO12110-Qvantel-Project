@@ -49,7 +49,7 @@ function cassie_init(){
 	        $GLOBALS['cassie']->insertUsersSegment($v4uuid, $language, $ip_address, $time_zone, $country_agent, $region, $city, $os);
 
 		$visits = $GLOBALS['cassie']->checkForPromotion($v4uuid);
-        	$GLOBALS['segments'] = $GLOBALS['rule']->init($visits, $os, $country_agent);
+        	$GLOBALS['segments'] = $GLOBALS['rule']->init($visits, $os, $country_agent, $language);
 
 
 		return $cookieArray;
@@ -57,7 +57,7 @@ function cassie_init(){
 
 	$cookie = get_cookie();
         $visits = $GLOBALS['cassie']->checkForPromotion($cookie[0]);
-	$GLOBALS['segments'] = $GLOBALS['rule']->init($visits, check_user_agent(), $GLOBALS['cassie']->getUserCountry($cookie[0]));
+	$GLOBALS['segments'] = $GLOBALS['rule']->init($visits, check_user_agent(), $GLOBALS['cassie']->getUserCountry($cookie[0]), $cookie[1]);
 
 	check_uuid();
 	drupal_add_js(drupal_get_path('module', 'cassie') . '/Timer.js');
@@ -280,6 +280,17 @@ function sortByCountry($a, $b){
     return ($a->country_segment == $country_agent) ? -1 : 1;
 }
 
+function sort_by_prio_and_location(&$result, $props){
+    usort($result, function($a, $b) use ($props){
+	  print '<pre>';
+  var_dump(get_defined_vars()); 
+  print '</pre>';
+        if($a->$props[0] == $b->$props[0])
+            return $a->$props[1] == False ? 1 : -1;
+        return $a->$props[0] == $props[2] ? -1 : 1;
+    });
+}
+
 
 function get_products(){
 	if (isset($_COOKIE['location'])){
@@ -298,46 +309,12 @@ function get_products(){
 	$highpriority = false;
 	$cookie = get_cookie();
 	$visits = $GLOBALS['cassie']->checkForPromotion($cookie[0]);
-	$segments = $GLOBALS['rule']->init($visits, 1, $GLOBALS['cassie']->getUserCountry($cookie[0]));
+	$segments = $GLOBALS['rule']->init($visits, 1, $GLOBALS['cassie']->getUserCountry($cookie[0]), $cookie[1]);
 	$highpriority = $segments['priorityHigh'];
-	/*
-	if ($cookie[1] == "fi"){
-		$result = $GLOBALS['cassie']->getProductsFi($page, $highpriority);
-	}else{
-		$result = $GLOBALS['cassie']->getProductsRu($page, $highpriority);
+
+	if ($highpriority == 1) {
+		$GLOBALS['cassie']->promoteUser($cookie[0]);
 	}
-	$sort = sortItems();
-
-	$selectedPriceAsc = "";
-	$selectedPriceDesc = "";
-
-	if ($sort == ''){
-		usort($result, "sortByCountry");
-		//$selectedPriceAsc = 'selected';
-	}
-
-	if ($sort == 'priceAsc'){
-		usort($result, "sortByPriceAsc");
-		$selectedPriceAsc = 'selected';
-	}
-
-	if ($sort == 'priceDesc'){
-                usort($result, "sortByPriceDesc");
-		$selectedPriceDesc = 'selected';
-        }
-
-	$output .= "<form method='post' action=''><select name='sort' id='sort'>";
-
-        $output .= "<option " . $selectedPriceAsc . " value='priceAsc'>Halvimmasta kalleimpaan</option>".
-        	   "<option " . $selectedPriceDesc . " value='priceDesc'>Kalleimmasta halvimpaan</option>".
-		   "<input type='submit' class='setSort' value='Select sort' /></select></form><br><br>";
-
-	foreach ($result as $row) {
-                $output .= "<a href='". $page . "/" . $row->product_id . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
-        	. $row->image_link . "'/><p id='productName'>" . $row->product_id . "</p><p id='productPrice'>" . $row->price .
-       		" &#x20ac;</p><p id='productDescription'>" . $row->description . "</div></div></a>";
-       		$i++;
-	}*/
 
 	$selectSort = "";
         $lowToHigh = "";
@@ -360,7 +337,22 @@ function get_products(){
         $selectedPriceDesc = "";
 
         if ($sort == ''){
-                usort($result, "sortByCountry");
+		$prioAndLocation = $segments['highPrioByCountry'];
+		if ($prioAndLocation == 1){
+			 $array = array("country_segment", "priority", "Finland");
+
+			  sort_by_prio_and_location($result, $array);
+
+		}else if($prioAndLocation == 2) {
+			 $array = array("country_segment", "priority", "Russia");
+
+			 sort_by_prio_and_location($result, $array);
+
+		}else{
+			usort($result, "sortByCountry");
+
+		}
+		//usort($result, "sortByCountry");
                 //$selectedPriceAsc = 'selected';
         }
 
@@ -462,8 +454,8 @@ function get_product_details(){
         $page = explode("/", $pageWithSubpage, 2);
 
         $productWithSpecials = substr(strrchr($address, '/'), 1);
-	      $product = str_replace("%20"," ", $productWithSpecials);
-	      $os = "Android";
+	$product = str_replace("%20"," ", $productWithSpecials);
+	//$os = "Android";
 
         $result = $GLOBALS['cassie']->getProductInfo($page[0], $product);
         $cookie = get_cookie();
@@ -477,7 +469,7 @@ function get_product_details(){
 	drupal_set_title($row['product_id']);
         $output = "<p id='productDetailPrice'>" . $row['price'] . " &#x20ac;</p><p id='productDetailDescription'>"
 	. $description . "</p><img id='productDetailImage' src='" . $row['image_link'] .
-  "'><form method='POST' action=''><br><button type='submit' id='addToCart'".
+  	"'><form method='POST' action=''><br><button type='submit' id='addToCart'".
 	" class='cart' name='cart'>Add to cart <i class='fa fa-arrow-right fa-lg'></i><i class='fa fa-shopping-cart fa-lg'></i></button></form>";
 	add_to_cart();
 
@@ -502,12 +494,16 @@ function add_to_cart(){
 		$cookie = get_cookie();
 
 		$productWithSpecials = substr(strrchr($address, '/'), 1);
-    $product = str_replace("%20"," ", $productWithSpecials);
+    		$product = str_replace("%20"," ", $productWithSpecials);
 		$result = $GLOBALS['cassie']->getProductInfo($page[0], $product);
 		$row = $result->first();
 		check_uuid();
-		$GLOBALS['cassie']->cartProduct($_SESSION['uuid'], $product, $row['price'], $row['image_link']);
 
+		if (isset($_SESSION['logged_as'])){
+			$GLOBALS['cassie']->cartRegisteredProduct($_SESSION['logged_as'], $product, $row['price'], $row['image_link']);
+		}else{
+			$GLOBALS['cassie']->cartProduct($_SESSION['uuid'], $product, $row['price'], $row['image_link']);
+		}
 
 		if (!isset($_COOKIE['count'])){
 			setcookie("count", 1, time()+3600, '/');
@@ -516,6 +512,7 @@ function add_to_cart(){
 			setcookie("count", $count + 1, time()+3600, '/');
 		}
 		drupal_set_message($product . " added to cart.");
+		header("Refresh:0");
 	}
 }
 
@@ -543,13 +540,13 @@ function updateCounter(){
 
         $page = str_replace("%20"," ", $pageWithSpecials);
 
-	if (isset($_COOKIE['location'])){  
+	if (isset($_COOKIE['location'])){
 		$cookie = get_cookie();
 
-//        if ($pageWasRefreshed ) {
+        if (!$pageWasRefreshed ) {
                 $GLOBALS['cassie']->updateCounter($page);
 		$GLOBALS['cassie']->updateVisits($cookie[0] , $page);
-  //      }
+        }
 
 	}
 }
@@ -570,6 +567,8 @@ function change_rules_page($form, &$form_state){
 
 		$priority = $GLOBALS['cassie']->getRule("priority");
 		$country = $GLOBALS['cassie']->getRule("country");
+		$priolocation = $GLOBALS['cassie']->getRule("priorityAndLocation");
+		$adByOs = $GLOBALS['cassie']->getRule("os");
 
                 $form['priority'] = array(
                         '#type' => 'radios',
@@ -583,6 +582,22 @@ function change_rules_page($form, &$form_state){
                         '#type' => 'radios',
 			'#default_value' => $country,
                         '#title' => 'Advertiment by country',
+                        '#attributes' => array('class' => array('hidevaluetext')),
+                        '#options' =>  array('1'=>t('True'), '0'=>t('False')),
+                );
+
+		$form['priolocation'] = array(
+                        '#type' => 'radios',
+                        '#default_value' => $priolocation,
+                        '#title' => 'Products by priority and location',
+                        '#attributes' => array('class' => array('hidevaluetext')),
+                        '#options' =>  array('1'=>t('True'), '0'=>t('False')),
+                );
+
+		$form['adByOs'] = array(
+                        '#type' => 'radios',
+                        '#default_value' => $adByOs,
+                        '#title' => 'Advertisement by OS',
                         '#attributes' => array('class' => array('hidevaluetext')),
                         '#options' =>  array('1'=>t('True'), '0'=>t('False')),
                 );
@@ -605,6 +620,8 @@ function change_rules_page_submit($form, &$form_state){
 	$rules = array(
           'priority' => $form_state['values']['priority'],
 	  'country' => $form_state['values']['country'],
+	  'priolocation' => $form_state['values']['priolocation'],
+	  'adByOs' => $form_state['values']['adByOs'],
           'status' => 1,
         );
 
@@ -619,6 +636,19 @@ function change_rules_page_submit($form, &$form_state){
         }else{
                 $GLOBALS['cassie']->enableRule("country");
         }
+
+	if ($rules['priolocation'] == 0){
+                $GLOBALS['cassie']->disableRule("priorityAndLocation");
+        }else{
+                $GLOBALS['cassie']->enableRule("priorityAndLocation");
+        }
+
+	if ($rules['adByOs'] == 0){
+                $GLOBALS['cassie']->disableRule("os");
+        }else{
+                $GLOBALS['cassie']->enableRule("os");
+        }
+	drupal_set_title("Rules saved successfully");
 }
 
 function add_product_page($form, &$form_state){
@@ -798,6 +828,8 @@ function productSessionArray($category, $product, $price, $amount, $description_
 	$updateProductArray = array($category, $product, $price, $amount, $description_fi, $description_ru, $image_link, $priority, $country);
 
         $productJson = json_encode($updateProductArray, JSON_UNESCAPED_UNICODE);
+
+	unset($_SESSION['updateProduct']);
         $_SESSION['updateProduct'] = $productJson;
 }
 
@@ -823,10 +855,10 @@ function update_product(){
 }
 
 function update_product_details_page($form, &$form_state){
-
-	$product = $_SESSION['updateProduct'];
+ 	$product = $_SESSION['updateProduct'];
         $product = stripslashes($product);
         $productArray = json_decode($product, true);
+
 	drupal_set_title("Update product " . $productArray[1]);
 
 	if (user_access('administer')) {
@@ -957,9 +989,10 @@ function update_product_details_page_submit($form, &$form_state){
 				$updateProduct['price'], $updateProduct['amount'], $updateProduct['description_fi'], $updateProduct['description_ru'], $updateProduct['image_link'],
 				$updateProduct['priority'], $updateProduct['country']);
 
-				productSessionArray($updateProduct['category'], $updateProduct['product'],
-       				$updateProduct['price'], $updateProduct['amount'], $updateProduct['description_fi'], $updateProduct['description_ru'],
-				$updateProduct['image_link'], $updateProduct['priority'], $updateProduct['country']);
+				//productSessionArray($updateProduct['category'], $updateProduct['product'],
+       				//$updateProduct['price'], $updateProduct['amount'], $updateProduct['description_fi'], $updateProduct['description_ru'],
+				//$updateProduct['image_link'], $updateProduct['priority'], $updateProduct['country']);
+
 				$form_state['redirect'] = $actual_link;
 				drupal_set_message($updateProduct['product'] . " updated.");
 		}else{

@@ -64,24 +64,8 @@ function log_out(){
 
 }
 
-
-/*function user_authenticate($name, $password){
-	$authenticate = $GLOBALS['cassie']->testLogin($name, $password);
-
-
-
-        if ($authenticate === 1){
-                $_SESSION['logged_as'] = $name;
-                return true;
-		//$form_state['redirect'] = '/';
-        }else{
-                drupal_set_message("Username or password is invalid!");
-        }
-
-}*/
-
 function cassieregister_login_page($form, &$form_state){
-	change_title("Kirjaudu sisään", "войдите в систему");
+	change_title("Kirjaudu sisään", "войти");
 
 	$array = change_labels();
         $form['name'] = array(
@@ -94,10 +78,6 @@ function cassieregister_login_page($form, &$form_state){
                 '#title' => $array[1],
                 '#attributes' => array('class' => array('hidevaluetext')),
         );
-        //$form['mail'] = array(
-        //      '#type' => 'textfield',
-        //      '#title' => t('E-mail'),
-        //);
 
         $form['submit'] = array(
                 '#type' => 'submit',
@@ -110,12 +90,9 @@ function cassieregister_login_page($form, &$form_state){
 }
 
 function cassieregister_login_page_submit($form, &$form_state) {
-        //$pass = user_password();
         $newuser = array(
           'name' => $form_state['values']['name'],
           'pass' => $form_state['values']['pass'],
-          //'mail' => $form_state['values']['mail'],
-          //'init' => $form_state['values']['mail'],
           'status' => 1,
         );
 
@@ -135,21 +112,10 @@ function cassieregister_login_page_submit($form, &$form_state) {
 		drupal_set_message("Fill fields first", 'error');
 	}
 
-        //$GLOBALS['cassie']->testRegister($newuser['name'], $newuser['pass']);
-        //$user = user_save('', $newuser);
-        //$user->password = $pass; // Add plain text password into user account to generate mail tokens.
-        //_user_mail_notify('register_no_approval_required', $user);
-
-        //drupal_set_message($test);
-
-
 }
 
-
-
-
 function cassieregister_registration_page($form, &$form_state){
-	change_title("Rekisteröidy", "регистр");
+	change_title("Rekisteröidy", "Зарегистрироваться");
 
 	$array = change_labels();
 	$form['name'] = array(
@@ -162,10 +128,6 @@ function cassieregister_registration_page($form, &$form_state){
 		'#title' => $array[1],
 		'#attributes' => array('class' => array('hidevaluetext')),
 	);
-	//$form['mail'] = array(
-	//	'#type' => 'textfield',
-	//	'#title' => t('E-mail'),
-	//);
 
 	$form['submit'] = array(
 		'#type' => 'submit',
@@ -178,12 +140,9 @@ function cassieregister_registration_page($form, &$form_state){
 }
 
 function cassieregister_registration_page_submit($form, &$form_state) {
-	//$pass = user_password();
 	$newuser = array(
 	  'name' => $form_state['values']['name'],
 	  'pass' => $form_state['values']['pass'],
-	  //'mail' => $form_state['values']['mail'],
-	  //'init' => $form_state['values']['mail'],
 	  'status' => 1,
 	);
 
@@ -208,10 +167,7 @@ function change_labels(){
 		$array[0] = "имя пользователя";
 		$array[1] = "пароль";
 		$array[2] = "войти";
-		$array[3] = "регистр";
+		$array[3] = "Зарегистрироваться";
 	}
 	return $array;
 }
-
-
-
