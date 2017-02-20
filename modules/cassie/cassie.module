@@ -89,21 +89,21 @@ function cassie_menu() {
   );
 
   $items['pants'] = array(
-    'title' => 'Pants',
+    'title' => 'Housut',
     'page callback' => 'pants_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
   $items['jackets'] = array(
-    'title' => 'Jackets',
+    'title' => 'Takit',
     'page callback' => 'jackets_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
   $items['phones'] = array(
-    'title' => 'Phones',
+    'title' => 'Puhelimet',
     'page callback' => 'phones_page',
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
@@ -300,7 +300,7 @@ function get_products(){
 	$visits = $GLOBALS['cassie']->checkForPromotion($cookie[0]);
 	$segments = $GLOBALS['rule']->init($visits, 1, $GLOBALS['cassie']->getUserCountry($cookie[0]));
 	$highpriority = $segments['priorityHigh'];
-
+	/*
 	if ($cookie[1] == "fi"){
 		$result = $GLOBALS['cassie']->getProductsFi($page, $highpriority);
 	}else{
@@ -337,7 +337,56 @@ function get_products(){
         	. $row->image_link . "'/><p id='productName'>" . $row->product_id . "</p><p id='productPrice'>" . $row->price .
        		" &#x20ac;</p><p id='productDescription'>" . $row->description . "</div></div></a>";
        		$i++;
-	}
+	}*/
+
+	$selectSort = "";
+        $lowToHigh = "";
+        $highToLow = "";
+
+        if ($cookie[1] == "fi"){
+                $selectSort = "Lajittele";
+                $lowToHigh = "Halvimmasta kalleimpaan";
+                $highToLow = "Kalleimmasta halvimpaan";
+                $result = $GLOBALS['cassie']->getProductsFi($page, $highpriority);
+        }else{
+                $selectSort = "сортировать по";
+                $lowToHigh = "от низкого до высокого";
+                $highToLow = "от высокой к низкой";
+                $result = $GLOBALS['cassie']->getProductsRu($page, $highpriority);
+        }
+        $sort = sortItems();
+
+        $selectedPriceAsc = "";
+        $selectedPriceDesc = "";
+
+        if ($sort == ''){
+                usort($result, "sortByCountry");
+                //$selectedPriceAsc = 'selected';
+        }
+
+        if ($sort == 'priceAsc'){
+                usort($result, "sortByPriceAsc");
+                $selectedPriceAsc = 'selected';
+        }
+
+        if ($sort == 'priceDesc'){
+                usort($result, "sortByPriceDesc");
+                $selectedPriceDesc = 'selected';
+        }
+
+        $output .= "<form method='post' action=''><select name='sort' id='sort'>";
+
+        $output .= "<option " . $selectedPriceAsc . " value='priceAsc'>" . $lowToHigh  . "</option>".
+                   "<option " . $selectedPriceDesc . " value='priceDesc'>" . $highToLow  ."</option>".
+                   "<input type='submit' class='setSort' value='" . $selectSort . "' /></select></form><br><br>";
+
+        foreach ($result as $row) {
+                $output .= "<a href='". $page . "/" . $row->product_id . "'><div class='productContainer'><div class='product'><img id='productImage$i' class='productImage' src='"
+                . $row->image_link . "'/><p id='productName'>" . $row->product_id . "</p><p id='productPrice'>" . $row->price .
+                " &#x20ac;</p><p id='productDescription'>" . $row->description . "</div></div></a>";
+                $i++;
+        }
+
         $output .= "</div>";
 
 	return $output;
@@ -373,22 +422,33 @@ function check_user_agent(){
 	return $os;
 }
 
+function change_title($value_fi, $value_ru){
+        $cookie = get_cookie();
+
+        if ($cookie[1] == "fi"){
+                drupal_set_title($value_fi);
+        }else{
+                drupal_set_title($value_ru);
+        }
+}
+
 function phones_page(){
 	updateCounter();
+	change_title("Puhelimet", "Телефоны");
 	return get_products();
 }
 
 function pants_page() {
 	updateCounter();
-	//return get_products();
+	change_title("Housut", "брюки");
 
-	echo  $_SESSION["timeListIndex"];
-        echo  $_SESSION["page1_time"];
-	return "housut";
+	//return get_products();
+	return get_products();
 }
 
 function jackets_page(){
 	updateCounter();
+	change_title("Takit", "Куртки");
 	return get_products();
 }
 
@@ -413,7 +473,7 @@ function get_product_details(){
         }else{
           $description = $row['description_ru'];
         }
-        
+
 	drupal_set_title($row['product_id']);
         $output = "<p id='productDetailPrice'>" . $row['price'] . " &#x20ac;</p><p id='productDetailDescription'>"
 	. $description . "</p><img id='productDetailImage' src='" . $row['image_link'] .
