@@ -430,16 +430,13 @@ class Cassie{
             return $count;
     }
 
-//Get contetns of specific users user agent
-    public function getRegisteredAmount($username}{
+//Get contents of specific users user agent
+   public function getRegisteredAmount($username){
             $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                    "SELECT COUNT(*) FROM registered_users_cart WHERE username = $username"));
+                    "SELECT COUNT(*) FROM registered_users_cart WHERE username = '$username'"));
             $row = $result->first();
             $count = $row['count'];
             return $count;
     }
-
-
-
 }
 ?>

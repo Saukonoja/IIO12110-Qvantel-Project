@@ -33,19 +33,19 @@ function shoppingcart_block_view($delta = '') {
    switch($delta){
      case 'cart':
         $block['subject'] = t("Shopping cart");
-//	check_uuid();
-//	if (isset($_SESSION['logged_as'])){
-//		$result = $GLOBALS['cassie']->getRegisteredAmount($_SESSION['logged_as']);
-//	}else{
-//		$result = $GLOBALS['cassie']->getAmoung($_SESSION['uuid']);
-//	}
-//	$row = $result->first();
-//	if ($row['amount'] > 0){
-//	       	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $_COOKIE['count'] . "</span></div></a>";
-//	}
-//	else{
-//		$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
-//	}
+	check_uuid();
+	if (isset($_SESSION['logged_as'])){
+		$result = $GLOBALS['cassie']->getRegisteredAmount($_SESSION['logged_as']);
+	}else{
+		$result = $GLOBALS['cassie']->getAmount($_SESSION['uuid']);
+	}
+
+	if ($result > 0){
+	       	$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>" . $result . "</span></div></a>";
+	}
+	else{
+		$block['content'] = "<a href='/cart'><div id='shoppingCartContainer'><i class='fa fa-shopping-cart fa-3x'></i><span id='count'>0</span></div></a>";
+	}
 	return $block;
   }
 
@@ -80,10 +80,10 @@ function cart_page(){
 		$display = "default;";
 	}
 
-	if (!isset($_SESSION['logged_as'])){
+	/*if (!isset($_SESSION['logged_as'])){
 		$display = "none";
 		$info = "Login first to checkout.";
-	}
+	}*/
 
 	$output .= "<div id='total'>Total price: " . $price . " &#x20ac; <br>Items in cart: " . $amount . " pcs.<br><br><span id='info'>". $info . "</span>" .
 		"<form method='POST' action=''><br><button id='checkout' style='display:" .$display . "' type='submit' name='checkout'>Checkout <i class='fa fa-money fa-lg'></i></button></div>";
@@ -100,10 +100,6 @@ function delete_product_from_cart(){
 		}else{
 			$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
 		}
-
-		$count = $_COOKIE['count'];
-
-		setcookie("count", $count - 1, time()+3600, '/');
 
 		header("Refresh:0");
                 drupal_set_message($_POST['product'] . " removed from the cart.");
@@ -126,8 +122,6 @@ function checkout(){
 				$GLOBALS['cassie']->updateCheckout($_SESSION['uuid'], $row['product_id'], $row['amount'], $row['price'], $row['image_link']);
 			}
 		}
-
-		setcookie("count", "", time()-3600);
 
 		header("Refresh:0");
 		drupal_set_message("Checkout was succesfull!");

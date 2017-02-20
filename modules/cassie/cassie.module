@@ -282,9 +282,6 @@ function sortByCountry($a, $b){
 
 function sort_by_prio_and_location(&$result, $props){
     usort($result, function($a, $b) use ($props){
-	  print '<pre>';
-  var_dump(get_defined_vars()); 
-  print '</pre>';
         if($a->$props[0] == $b->$props[0])
             return $a->$props[1] == False ? 1 : -1;
         return $a->$props[0] == $props[2] ? -1 : 1;
@@ -505,12 +502,12 @@ function add_to_cart(){
 			$GLOBALS['cassie']->cartProduct($_SESSION['uuid'], $product, $row['price'], $row['image_link']);
 		}
 
-		if (!isset($_COOKIE['count'])){
+		/*if (!isset($_COOKIE['count'])){
 			setcookie("count", 1, time()+3600, '/');
 		}else{
 			$count = $_COOKIE['count'];
 			setcookie("count", $count + 1, time()+3600, '/');
-		}
+		}*/
 		drupal_set_message($product . " added to cart.");
 		header("Refresh:0");
 	}
@@ -624,31 +621,38 @@ function change_rules_page_submit($form, &$form_state){
 	  'adByOs' => $form_state['values']['adByOs'],
           'status' => 1,
         );
+	$actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+	try{
+		if ($rules['priority'] == 0){
+			$GLOBALS['cassie']->disableRule("priority");
+		}else{
+			$GLOBALS['cassie']->enableRule("priority");
+		}
 
-	if ($rules['priority'] == 0){
-		$GLOBALS['cassie']->disableRule("priority");
-	}else{
-		$GLOBALS['cassie']->enableRule("priority");
+		if ($rules['country'] == 0){
+                	$GLOBALS['cassie']->disableRule("country");
+        	}else{
+              		$GLOBALS['cassie']->enableRule("country");
+        	}
+
+		if ($rules['priolocation'] == 0){
+               		$GLOBALS['cassie']->disableRule("priorityAndLocation");
+        	}else{
+                	$GLOBALS['cassie']->enableRule("priorityAndLocation");
+        	}
+
+		if ($rules['adByOs'] == 0){
+                	$GLOBALS['cassie']->disableRule("os");
+        	}else{
+                	$GLOBALS['cassie']->enableRule("os");
+        	}
+		drupal_set_message("Rules saved successfully.");
+		$form_state['redirect'] = FALSE;
+		header("Refresh:0");
+	}catch(Exception $e){
+		drupal_set_message($e->getMessage(), 'error');
+		$form_state['redirect'] = FALSE;
 	}
-
-	if ($rules['country'] == 0){
-                $GLOBALS['cassie']->disableRule("country");
-        }else{
-                $GLOBALS['cassie']->enableRule("country");
-        }
-
-	if ($rules['priolocation'] == 0){
-                $GLOBALS['cassie']->disableRule("priorityAndLocation");
-        }else{
-                $GLOBALS['cassie']->enableRule("priorityAndLocation");
-        }
-
-	if ($rules['adByOs'] == 0){
-                $GLOBALS['cassie']->disableRule("os");
-        }else{
-                $GLOBALS['cassie']->enableRule("os");
-        }
-	drupal_set_title("Rules saved successfully");
 }
 
 function add_product_page($form, &$form_state){
@@ -829,7 +833,6 @@ function productSessionArray($category, $product, $price, $amount, $description_
 
         $productJson = json_encode($updateProductArray, JSON_UNESCAPED_UNICODE);
 
-	unset($_SESSION['updateProduct']);
         $_SESSION['updateProduct'] = $productJson;
 }
 
