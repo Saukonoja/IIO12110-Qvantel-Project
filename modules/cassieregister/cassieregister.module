@@ -42,9 +42,11 @@ function cassieregister_block_view($delta = '') {
 
    switch($delta){
      case 'logged':
+	$hello = set_text("Hei", "привет");
+	$logout = set_text("Poistu", "Выйти");
 	if (isset($_SESSION['logged_as'])){
-        	$block['content'] = "<form method='post' action=''><div id='user'>Hello " . $_SESSION['logged_as'] .
-		"!<input type='submit' id='logout' name='logout' value='Log out'></div></form>";
+        	$block['content'] = "<form method='post' action=''><div id='user'>". $hello . " " . $_SESSION['logged_as'] .
+		"!<input type='submit' id='logout' name='logout' value=" . $logout . "></div></form>";
 	}
 	else{
 		$block['content'] = "";
@@ -97,7 +99,7 @@ function cassieregister_login_page_submit($form, &$form_state) {
         );
 
 	$authenticate = 0;
-
+     try{
 	if ($newuser['name'] !== "" && $newuser['pass'] !== ""){
 		$authenticate = $GLOBALS['cassie']->testLogin($newuser['name'], $newuser['pass']);
 
@@ -105,13 +107,19 @@ function cassieregister_login_page_submit($form, &$form_state) {
                 	$_SESSION['logged_as'] = $newuser['name'];
                 	$form_state['redirect'] = '/';
         	}else{
-                	drupal_set_message("Username or password is invalid!", 'error');
+			$usernameInvalid = set_text("Käyttäjänimi tai salasana on väärin!", "Имя пользователя или пароль неверны!");
+			$form_state['redirect'] = FALSE;
+                	drupal_set_message($usernameInvalid, 'error');
         	}
-
 	}else{
-		drupal_set_message("Fill fields first", 'error');
+		$fillFields = set_text("Täytä kaikki kentät ensin!", "Заполните все поля, прежде всего!");
+		$form_state['redirect'] = FALSE;
+		drupal_set_message($fillFields, 'error');
 	}
-
+     }catch (Exception $e) {
+	 $form_state['redirect'] = FALSE;
+         drupal_set_message($e->getMessage(), "\n");
+     }
 }
 
 function cassieregister_registration_page($form, &$form_state){
@@ -129,6 +137,12 @@ function cassieregister_registration_page($form, &$form_state){
 		'#attributes' => array('class' => array('hidevaluetext')),
 	);
 
+	$form['repass'] = array(
+                '#type' => 'password',
+                '#title' => $array[4],
+                '#attributes' => array('class' => array('hidevaluetext')),
+        );
+
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t($array[3]),
@@ -143,15 +157,37 @@ function cassieregister_registration_page_submit($form, &$form_state) {
 	$newuser = array(
 	  'name' => $form_state['values']['name'],
 	  'pass' => $form_state['values']['pass'],
+	  'repass' => $form_state['values']['repass'],
 	  'status' => 1,
 	);
-
-	if ($newuser['name'] !== "" && $newuser['pass'] !== ""){
+    try{
+	if ($newuser['name'] !== "" && $newuser['pass'] !== "" && $newuser['repass'] !== ""){
+	   if ($newuser['pass'] == $newuser['repass']){
+	     $exists = $GLOBALS['cassie']->checkIfUserExists($newuser['name']);
+	     if ($exists == 0){
 		$GLOBALS['cassie']->testRegister($newuser['name'], $newuser['pass']);
-		drupal_set_message('Registration was succesfull!');
+		$success = set_text("Rekisteröinti onnistui!", "Регистрация прошла успешно!");
+		$form_state['redirect'] = FALSE;
+		drupal_set_message($success);
+		header( "Refresh:1.5; url=/login", true, 303);
+	     }else{
+		$userExist = set_text("Käyttäjätunnus on jo käytetty!", "Имя пользователя уже используется!");
+                $form_state['redirect'] = FALSE;
+                drupal_set_message($userExist, 'error');
+	     }
+	   }else{
+		$passwordMatch = set_text("Salasanat eivät ole samat!", "Пароли не совпадают!");
+		$form_state['redirect'] = FALSE;
+		drupal_set_message($passwordMatch, 'error');
+	   }
         }else{
-                drupal_set_message("Fill fields first", 'error');
+		$fillFields = set_text("Täytä  kaikki kentät ensin!", "Заполните все поля, прежде всего!");
+		$form_state['redirect'] = FALSE;
+                drupal_set_message($fillFields, 'error');
         }
+    }catch (Exception $e) {
+    	drupal_set_message($e->getMessage(), "\n");
+    }
 }
 
 function change_labels(){
@@ -163,11 +199,13 @@ function change_labels(){
 		$array[1] = "Salasana";
 		$array[2] = "Kirjaudu";
 		$array[3] = "Rekisteröidy";
+		$array[4] = "Salasana uudestaan";
 	}else{
 		$array[0] = "имя пользователя";
 		$array[1] = "пароль";
 		$array[2] = "войти";
 		$array[3] = "Зарегистрироваться";
+		$array[4] = "пароль еще раз";
 	}
 	return $array;
 }

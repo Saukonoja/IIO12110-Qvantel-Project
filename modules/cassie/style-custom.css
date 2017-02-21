@@ -114,6 +114,9 @@ img.productImage{
         padding: 10px 10px 10px;
         background-color: #ACCB12;
 	font-size: 16px;
+	margin-left: 15px;
+	position: absolute;
+	top: 200px;
 }
 
 #addToCart:hover {
@@ -123,3 +126,6 @@ img.productImage{
         cursor: pointer;
 }
 
+.side{
+	display: inline-block;
+}

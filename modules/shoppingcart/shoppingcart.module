@@ -8,9 +8,16 @@ $GLOBALS['cassie']->connect();
 
 function shoppingcart_menu(){
   $items['cart'] = array(
-    'title' => 'Shopping cart',
+    'title' => 'Ostoskori',
     'page callback' => 'cart_page',
     'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+  );
+
+  $items['bought'] = array(
+    'title' => 'Ostetut tuotteet',
+    'page callback' => 'bought_products',
+    'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
   );
 
@@ -51,9 +58,47 @@ function shoppingcart_block_view($delta = '') {
 
 }
 
+function bought_products(){
+	check_uuid();
+        change_title("Ostetut tuotteet", "закупленные продукты");
+
+        if (isset($_SESSION['logged_as'])){
+                $result = $GLOBALS['cassie']->getPurchases($_SESSION['logged_as']);
+
+        $output = "<table>";
+        $price = 0;
+        $amount = 0;
+        $pcs = set_text("kpl", " ^  ^  ^   ");
+        foreach ($result as $row){
+                $output .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] .
+                 "</td><td>" . $row['price'] . " &#x20ac;</td><td>" . $row['amount'].
+                 " " . $pcs . "</td><td></td></tr>";
+                $price += $row['price'] * $row['amount'];
+                $amount += $row['amount'];
+        }
+        $output .= "</table>";
+        $display = "none;";
+
+        if ($amount > 0){
+                $display = "default;";
+        }
+
+        $totalPrice = set_text("Kokonaishinta", "     ^    ^   ^       ");
+        $itemsInCart = set_text("Ostetut tuotteet", "закупленные продукты");
+
+        $output .= "<div id='total'>" . $totalPrice . ": " . $price . " &#x20ac; <br>" . $itemsInCart . ": " . $amount . " " . $pcs . "</div>";
+	}else{
+		$registerFirst = set_text("Rekisteröidy ensin.", "Регистрация в первую очередь.");
+		$output = $registerFirst;
+	}
+
+        return $output;
+}
+
 
 function cart_page(){
 	check_uuid();
+	change_title("Ostoskori", "корзина для покупок");
 	if (isset($_SESSION['logged_as'])){
 		$result = $GLOBALS['cassie']->getRegisteredCartProducts($_SESSION['logged_as']);
 	}else{
@@ -63,10 +108,11 @@ function cart_page(){
 	$output = "<table>";
 	$price = 0;
 	$amount = 0;
+	$pcs = set_text("kpl", "штук");
 	foreach ($result as $row){
 		$output .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] .
 		 "</td><td>" . $row['price'] . " &#x20ac;</td><td>" . $row['amount'].
-		 " pcs.</td><td><form method='POST' action=''><input type='hidden' name='product' value='" . $row['product_id'] .
+		 " " . $pcs . "</td><td><form method='POST' action=''><input type='hidden' name='product' value='" . $row['product_id'] .
 		 "' ><button type='submit' id='deleteFromCart' name='deleteProduct'><i class='fa fa-times'></i></button></form></td></tr>";
         	$price += $row['price'] * $row['amount'];
 		$amount += $row['amount'];
@@ -80,13 +126,12 @@ function cart_page(){
 		$display = "default;";
 	}
 
-	/*if (!isset($_SESSION['logged_as'])){
-		$display = "none";
-		$info = "Login first to checkout.";
-	}*/
+	$checkout = set_text("Osta", "купить");
+	$totalPrice = set_text("Kokonaishinta", "общая цена");
+	$itemsInCart = set_text("Tuotteita ostoskorissa", "Элементы в корзине");
 
-	$output .= "<div id='total'>Total price: " . $price . " &#x20ac; <br>Items in cart: " . $amount . " pcs.<br><br><span id='info'>". $info . "</span>" .
-		"<form method='POST' action=''><br><button id='checkout' style='display:" .$display . "' type='submit' name='checkout'>Checkout <i class='fa fa-money fa-lg'></i></button></div>";
+	$output .= "<div id='total'>" . $totalPrice . ": " . $price . " &#x20ac; <br>" . $itemsInCart . ": " . $amount . " " . $pcs . "<br><br><span id='info'>". $info . "</span>" .
+		"<form method='POST' action=''><br><button id='checkout' style='display:" .$display . "' type='submit' name='checkout'>" . $checkout . " <i class='fa fa-money fa-lg'></i></button></div>";
 
 	checkout();
 	return $output;
@@ -101,8 +146,9 @@ function delete_product_from_cart(){
 			$GLOBALS['cassie']->removeProduct($_SESSION['uuid'], $_POST['product']);
 		}
 
-		header("Refresh:0");
-                drupal_set_message($_POST['product'] . " removed from the cart.");
+		$removeCart = set_text("poistettu ostoskorista.", "удален из корзины.");
+                drupal_set_message($_POST['product'] . " " . $removeCart);
+		header("Refresh:1.5");
 	}
 }
 
@@ -123,7 +169,8 @@ function checkout(){
 			}
 		}
 
-		header("Refresh:0");
-		drupal_set_message("Checkout was succesfull!");
+		$checkoutSuccess = set_text("Osto onnistui!", "Покупка успеха!");
+		drupal_set_message($checkoutSuccess);
+		header("Refresh:1.5");
 	}
 }

@@ -421,22 +421,51 @@ class Cassie{
             return $country;
     }
 
-//Get contetns of specific users user agent
+//Get number of items in cart for unregistered user
     public function getAmount($uuid){
+	    $count = 0;
             $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                    "SELECT COUNT(*) FROM users_cart WHERE uuid = $uuid"));
+                    "SELECT amount FROM users_cart WHERE uuid = $uuid"));
+	     foreach ($result as $row){
+                $count = $count + $row['amount'];
+            }
+            return $count;
+    }
+
+//Get number of items in cart for registered user
+   public function getRegisteredAmount($username){
+	    $count = 0;
+            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT amount FROM registered_users_cart WHERE username = '$username'"));
+	    foreach ($result as $row){
+            	$count = $count + $row['amount'];
+	    }
+            return $count;
+    }
+
+//Get number of items in cart for registered user
+   public function checkIfUserExists($username){
+            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT COUNT(*) FROM registered_segment_users WHERE username = '$username'"));
             $row = $result->first();
             $count = $row['count'];
             return $count;
     }
 
-//Get contents of specific users user agent
-   public function getRegisteredAmount($username){
-            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
-                    "SELECT COUNT(*) FROM registered_users_cart WHERE username = '$username'"));
-            $row = $result->first();
-            $count = $row['count'];
-            return $count;
+//Get all purchased products of registered user
+    public function getPurchases($username){
+	    $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+		    "SELECT * FROM registered_users_purchases WHERE username = '$username'"));
+	    return $result;
     }
+
+//Get all purchased products of registered user
+    public function getSingleProduct($category_id, $product_id){
+            $result = $GLOBALS['session']->execute(new Cassandra\SimpleStatement(
+                    "SELECT * FROM products WHERE category_id = '$category_id' AND product_id = '$product_id'"));
+            return $result;
+    }
+
+
 }
 ?>

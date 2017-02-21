@@ -280,25 +280,11 @@ function sortByCountry($a, $b){
     return ($a->country_segment == $country_agent) ? -1 : 1;
 }
 
-
-function sort_by_prio_and_location(&$array, $props){
-    usort($array, function($a, $b) use ($props){
-	$prio = $props[1];
-        $country_segment = $props[0];
-        $country = $props[2];
-
-        if($a->$country_segment == $b->$country_segment){
-            if($a->$prio == false){
-                return 1;
-            }else{
-                return -1;
-            }
-        } 
-        if ($a->$country_segment != $country){
-            return 1;
-        }else{
-            return -1;
-        }
+function sort_by_prio_and_location(&$result, $props){
+    usort($result, function($a, $b) use ($props){
+        if($a->$props[0] == $b->$props[0])
+            return $a->$props[1] == False ? 1 : -1;
+        return $a->$props[0] == $props[2] ? -1 : 1;
     });
 }
 
@@ -366,8 +352,6 @@ function get_products(){
 		//usort($result, "sortByCountry");
                 //$selectedPriceAsc = 'selected';
         }
-
-
 
         if ($sort == 'priceAsc'){
                 usort($result, "sortByPriceAsc");
@@ -487,12 +471,13 @@ function get_product_details(){
           $description = $row['description_ru'];
         }
 
-	$addToCart = set_text("Lisää ostoskoriin", "Добавить в корзину");
+	$addToCart = set_text("Lisää ostoskoriin", "");
+
 	drupal_set_title($row['product_id']);
         $output = "<p id='productDetailPrice'>" . $row['price'] . " &#x20ac;</p><p id='productDetailDescription'>"
-	. $description . "</p><div class='side'><img id='productDetailImage' src='" . $row['image_link'] .
-  	"'></div><div class='side'><form method='POST' action=''><br><button type='submit' id='addToCart'".
-	" class='cart' name='cart'>" . $addToCart .  " <i class='fa fa-arrow-right fa-lg'></i><i class='fa fa-shopping-cart fa-lg'></i></button></form></div>";
+	. $description . "</p><img id='productDetailImage' src='" . $row['image_link'] .
+  	"'><form method='POST' action=''><br><button type='submit' id='addToCart'".
+	" class='cart' name='cart'>" . $addToCart  .  " <i class='fa fa-arrow-right fa-lg'></i><i class='fa fa-shopping-cart fa-lg'></i></button></form>";
 	add_to_cart();
 
         return $output;
@@ -509,9 +494,9 @@ function add_to_cart(){
 
  		$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
-  		$pageUnparsed = explode("/", $address, 3);
-  		$pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
-  		$page = explode("/", $pageWithSubpage, 2);
+  	$pageUnparsed = explode("/", $address, 3);
+  	$pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
+  	$page = explode("/", $pageWithSubpage, 2);
 
 		$cookie = get_cookie();
 
@@ -526,9 +511,15 @@ function add_to_cart(){
 		}else{
 			$GLOBALS['cassie']->cartProduct($_SESSION['uuid'], $product, $row['price'], $row['image_link']);
 		}
-		$addedToCart = set_text("lisätty ostoskoriin.", "добавлен в корзину.");
-		drupal_set_message($product . " " . $addedToCart);
-		header("Refresh:1.5");
+
+		/*if (!isset($_COOKIE['count'])){
+			setcookie("count", 1, time()+3600, '/');
+		}else{
+			$count = $_COOKIE['count'];
+			setcookie("count", $count + 1, time()+3600, '/');
+		}*/
+		drupal_set_message($product . " added to cart.");
+		header("Refresh:0");
 	}
 }
 
@@ -667,7 +658,7 @@ function change_rules_page_submit($form, &$form_state){
         	}
 		drupal_set_message("Rules saved successfully.");
 		$form_state['redirect'] = FALSE;
-		header("Refresh:1.5");
+		header("Refresh:0");
 	}catch(Exception $e){
 		drupal_set_message($e->getMessage(), 'error');
 		$form_state['redirect'] = FALSE;
@@ -786,7 +777,6 @@ function add_product_page_submit($form, &$form_state) {
 				$newproduct['amount'], $newproduct['description_fi'], $newproduct['description_ru'], $newproduct['image_link'], $newproduct['priority'], $newproduct['country']);
 			$form_state['rebuild'] = TRUE;
 			drupal_set_message("Product " . $newproduct['product'] . " added.");
-			header("Refresh:1.5");
 		}else{
 			drupal_set_message("Fill fields first.", 'error');
 			$form_state['redirect'] = FALSE;
@@ -823,9 +813,15 @@ function update_product_page(){
                 	$output .= "<table>";
                 	foreach ($result as $row){
                         	 $output .= "<tr><td><img id='productImage' src='" . $row['image_link'] . "'/></td><td>" . $row['product_id'] . "</td>" .
-                         	"</td><td><form method='POST' action=''>" .
-				"<input type='hidden' name='category' value='" . $row['category_id']  . "'>" .
+                         	"</td><td><form method='POST' action=''><input type='hidden' name='category' value='" . $row['category_id']  . "'>" .
 			 	"<input type='hidden' name='product' value='" . $row['product_id']  . "'>" .
+				"<input type='hidden' name='country' value='" . $row['country_segment']  . "'>" .
+			 	"<input type='hidden' name='price' value='" . $row['price']  . "'>" .
+ 			 	"<input type='hidden' name='amount' value='" . $row['amount']  . "'>" .
+			 	"<input type='hidden' name='description_fi' value='" . $row['description_fi']  . "'>" .
+				"<input type='hidden' name='description_ru' value='" . $row['description_ru']  . "'>" .
+			 	"<input type='hidden' name='image_link' value='" . $row['image_link']  . "'>" .
+			 	"<input type='hidden' name='priority' value='" . $row['high_priority_segment']  . "'>" .
                          	"<button type='submit' id='update" . $row['product_id'] . "' name='updateProduct' class='updateProduct'><i class='fa fa-pencil'></i></button></form></td></tr>";
                 	}
                 	$output .= "</table>";
@@ -840,6 +836,14 @@ function update_product_page(){
 		drupal_set_title("Access denied");
 		return "";
 	}
+}
+
+function productSessionArray($category, $product, $price, $amount, $description_fi, $description_ru, $image_link, $priority, $country){
+	$updateProductArray = array($category, $product, $price, $amount, $description_fi, $description_ru, $image_link, $priority, $country);
+
+        $productJson = json_encode($updateProductArray, JSON_UNESCAPED_UNICODE);
+
+        $_SESSION['updateProduct'] = $productJson;
 }
 
 function select_category(){
@@ -857,46 +861,20 @@ function select_category(){
 
 function update_product(){
 	if (isset($_POST['updateProduct'])){
-		header("Location: /update/" . $_POST['product']. "?".$_SERVER['QUERY_STRING']."&cat=" . $_POST['category']);
+		productSessionArray($_POST['category'], $_POST['product'], $_POST['price'], $_POST['amount'], $_POST['description_fi'], $_POST['description_ru'],
+		$_POST['image_link'], $_POST['priority'], $_POST['country']);
+		header("Location: /update/" . $_POST['product']);
         }
 }
 
 function update_product_details_page($form, &$form_state){
-	$address = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+ 	$product = $_SESSION['updateProduct'];
+        $product = stripslashes($product);
+        $productArray = json_decode($product, true);
 
-        $pageUnparsed = explode("/", $address, 3);
-        $pageWithSubpage = substr($pageUnparsed[2], strpos($pageUnparsed[2], "/") + 1);
-        $page = explode("/", $pageWithSubpage, 2);
-
-        $productWithSpecials = substr(strrchr($address, '/'), 1);
-        $productUnparsed = str_replace("%20"," ", $productWithSpecials);
-	$category = substr($productUnparsed, strpos($productUnparsed, "=") + 1);
-	$product = strtok($productUnparsed, '?');
-
-	drupal_set_title("Update product " . $product);
+	drupal_set_title("Update product " . $productArray[1]);
 
 	if (user_access('administer')) {
-
-		$productArray = $GLOBALS['cassie']->getSingleProduct($category, $product);
-		$row = $productArray->first();
-
-
-		$category_id = $row['category_id'];
-		$product_id = $row['product_id'];
-		$country = $row['country_segment'];
-		$image_link = $row['image_link'];
-
-		$high_priority = 0;
-
-		if ($row['high_priority_segment'] == true){
-			$high_priority = 1;
-		}
-
-		$amount = $row['amount'];
-		$price = $row['price'];
-		$description_fi = $row['description_fi'];
-		$description_ru = $row['description_ru'];
-
 		$array;
 		$result = $GLOBALS['cassie']->getCategories();
                 foreach ($result as $row){
@@ -913,72 +891,72 @@ function update_product_details_page($form, &$form_state){
 		$form['category_old'] = array(
                         '#type' => 'hidden',
                         '#title' => 'Category',
-                        '#value' => $category_id,
+                        '#value' => $productArray[0],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
                 $form['product_old'] = array(
                         '#type' => 'hidden',
                         '#title' => 'Product',
-                        '#value' => $product_id,
+                        '#value' => $productArray[1],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
 
                 $form['category'] = array(
                         '#type' => 'select',
                         '#title' => 'Category',
-			'#default_value' => $category_id,
+			'#default_value' => $productArray[0],
 			'#options' => array_values($array),
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
                 $form['product'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Product',
-			'#default_value' => $product_id,
+			'#default_value' => $productArray[1],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
 		$form['country'] = array(
                         '#type' => 'select',
                         '#title' => 'Country',
-			'#default_value' => $country,
+			'#default_value' => $productArray[8],
                         '#attributes' => array('class' => array('hidevaluetext')),
                         '#options' => $form['country_options']['#value'],
                 );
                 $form['image_link'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Imagelink',
-			'#default_value' => $image_link,
+			'#default_value' => $productArray[6],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
                 $form['priority'] = array(
                         '#type' => 'radios',
                         '#title' => 'Priority',
-			'#default_value' => $high_priority,
+			'#default_value' => $productArray[7],
                         '#attributes' => array('class' => array('hidevaluetext')),
                         '#options' =>  array('1'=>t('True'), '0'=>t('False')),
                 );
                 $form['amount'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Amount',
-			'#default_value' => $amount,
+			'#default_value' => $productArray[3],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
                 $form['price'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Price',
-			'#default_value' => $price,
+			'#default_value' => $productArray[2],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
 		$form['description_fi'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Description (Finnish)',
-			'#default_value' => $description_fi,
+			'#default_value' => $productArray[4],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
 
                 $form['description_ru'] = array(
                         '#type' => 'textfield',
                         '#title' => 'Description (Russian)',
-			'#default_value' => $description_ru,
+			'#default_value' => $productArray[5],
                         '#attributes' => array('class' => array('hidevaluetext')),
                 );
                 $form['submit'] = array(
@@ -1024,9 +1002,12 @@ function update_product_details_page_submit($form, &$form_state){
 				$updateProduct['price'], $updateProduct['amount'], $updateProduct['description_fi'], $updateProduct['description_ru'], $updateProduct['image_link'],
 				$updateProduct['priority'], $updateProduct['country']);
 
-				$form_state['rebuild'] = TRUE;
+				//productSessionArray($updateProduct['category'], $updateProduct['product'],
+       				//$updateProduct['price'], $updateProduct['amount'], $updateProduct['description_fi'], $updateProduct['description_ru'],
+				//$updateProduct['image_link'], $updateProduct['priority'], $updateProduct['country']);
+
+				$form_state['redirect'] = $actual_link;
 				drupal_set_message($updateProduct['product'] . " updated.");
-				header("Refresh:1.5");
 		}else{
                         drupal_set_message("Fill fields first.", 'error');
                         $form_state['redirect'] = FALSE;
@@ -1088,8 +1069,8 @@ function delete_product(){
 	if (isset($_POST['deleteProduct'])){
                 $GLOBALS['cassie']->deleteProduct($_POST['category'], $_POST['product']);
 
+                header("Refresh:0");
                 drupal_set_message($_POST['product'] . " deleted from the store.");
-		header("Refresh:1.5");
         }
 
 }
