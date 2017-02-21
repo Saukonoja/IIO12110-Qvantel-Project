@@ -293,7 +293,7 @@ function sort_by_prio_and_location(&$array, $props){
             }else{
                 return -1;
             }
-        } 
+        }
         if ($a->$country_segment != $country){
             return 1;
         }else{
@@ -449,19 +449,19 @@ function set_text($value_fi, $value_ru){
 
 function phones_page(){
 	updateCounter();
-	change_title("Puhelimet", "Телефоны");
+	//change_title("Puhelimet", "Телефоны");
 	return get_products();
 }
 
 function pants_page() {
 	updateCounter();
-	change_title("Housut", "брюки");
+	//change_title("Housut", "брюки");
 	return get_products();
 }
 
 function jackets_page(){
 	updateCounter();
-	change_title("Takit", "Куртки");
+	//change_title("Takit", "Куртки");
 	return get_products();
 }
 
@@ -786,7 +786,7 @@ function add_product_page_submit($form, &$form_state) {
 				$newproduct['amount'], $newproduct['description_fi'], $newproduct['description_ru'], $newproduct['image_link'], $newproduct['priority'], $newproduct['country']);
 			$form_state['rebuild'] = TRUE;
 			drupal_set_message("Product " . $newproduct['product'] . " added.");
-			header("Refresh:1.5");
+			header("Refresh:0.5");
 		}else{
 			drupal_set_message("Fill fields first.", 'error');
 			$form_state['redirect'] = FALSE;
@@ -1026,7 +1026,7 @@ function update_product_details_page_submit($form, &$form_state){
 
 				$form_state['rebuild'] = TRUE;
 				drupal_set_message($updateProduct['product'] . " updated.");
-				header("Refresh:1.5");
+				header("Refresh:0.5");
 		}else{
                         drupal_set_message("Fill fields first.", 'error');
                         $form_state['redirect'] = FALSE;
@@ -1087,9 +1087,8 @@ function delete_product_page(){
 function delete_product(){
 	if (isset($_POST['deleteProduct'])){
                 $GLOBALS['cassie']->deleteProduct($_POST['category'], $_POST['product']);
-
+		header("Refresh:0");
                 drupal_set_message($_POST['product'] . " deleted from the store.");
-		header("Refresh:1.5");
         }
 
 }
